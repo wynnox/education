@@ -57,7 +57,8 @@ int main(int argc, char* argv[])
             return INVALID_INPUT;
         }
 
-        char * output_filename = (char*)malloc( (strlen(argv[2]) + 6) * sizeof(char) );
+
+        char * output_filename = (char*)malloc( (strlen(argv[2]) + strlen("/out_") + 1) * sizeof(char) );
         if(output_filename == NULL)
         {
             printf("Ошибка: некорректный ввод\n");
