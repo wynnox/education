@@ -8,105 +8,144 @@ int main(int argc, char* argv[])
         return INVALID_INPUT;
     }
 
-    long int number = 0;
     errno = 0;
 
-    if((argv[1][0] == '-' || argv[1][0] == '\\') && argv[1][2] == '\0')
-    {
-        char *endptr;
-        number = strtol(argv[2], &endptr, 10);
-
-        if (errno == ERANGE && (number == LONG_MAX || number == LONG_MIN)) {
-            printf("Переполнение\n");
-            return INVALID_INPUT;
-        } else if (errno != 0 && number == 0) {
-            printf("Ошибка: \n");
-            return INVALID_INPUT;
-        } else if (*endptr != '\0') {
-            printf("Строка не содержит чисел\n");
-            return INVALID_INPUT;
-        } else {
-            printf("Число: %ld\n", number);
-        }
-
-
-        switch (argv[1][1])
-        {
-            case 'h':
-                // что делать с 0?????????????????????
-                int* result_h = NULL;
-                int size_arr_result_h = 0;
-                if (multiple_of_a_number(number, &result_h, &size_arr_result_h) == INVALID_MEMORY)
-                {
-                    printf("Ошибка: ошибка работы с памятью\n");
-                    free(result_h);
-                    return INVALID_MEMORY;
-                }
-                //что вывести если массив пуст?
-                for(int i = 0; i < size_arr_result_h; ++i)
-                {
-                    printf("%d ", result_h[i]);
-                }
-                free(result_h);
-                break;
-            case 'p':
-                if(!is_prime(number))
-                {
-                    printf("Число является простым\n");
-                }
-                else
-                {
-                    printf("Число является составным\n");
-                }
-                break;
-            case 's':
-                //что с отрицательными делать?
-                int size_arr_result_s = count_digits(number);
-                char* result_s = NULL;
-
-                if(split_number_to_digits(number, &result_s, &size_arr_result_s) == INVALID_MEMORY)
-                {
-                    printf("Ошибка: ошибка работы с памятью\n");
-                    free(result_s);
-                    return INVALID_MEMORY;
-                }
-                for(int i = 0; i < size_arr_result_s; ++i)
-                {
-                    printf("%c ", result_s[i]);
-                }
-                printf("\n");
-                free(result_s);
-                break;
-            case 'e':
-                printf("ok\n");
-                break;
-            case 'a':
-                long long int result_a = 0;
-                if (sum_of_numbers(number, &result_a) == INVALID_MEMORY)
-                {
-                    printf("Ошибка: произошло переполнение\n");
-                    return INVALID_MEMORY;
-                }
-                printf("%lld\n", result_a);
-                break;
-            case 'f':
-                unsigned long long int result_f = 1;
-                if(factorial_of_a_number(number, &result_f) == INVALID_MEMORY)
-                {
-                    printf("Ошибка: произошло переполнение\n");
-                    return INVALID_MEMORY;
-                }
-                printf("%llu\n", result_f);
-                break;
-            default:
-                printf("Ошибка: такого флага нет в доступных флагах: %s\n", argv[1]);
-                break;
-        }
-    }
-    else
-    {
-        printf("Ошибка: неверный формат флага");
+    if( !((argv[1][0] == '-' || argv[1][0] == '/') && argv[1][2] == '\0') ) {
+        printf("Ошибка: некорректный ввод");
         return INVALID_INPUT;
+    }
+
+    long int number = 0;
+    if(convert_str_to_int(argv[2], &number, 10) != OK)
+    {
+        printf("Ошибка: невалидное число\n");
+        return INVALID_INPUT;
+    }
+
+    switch (argv[1][1])
+    {
+    case 'h':
+
+        int* result_h = NULL;
+        int size_arr_result_h = 0;
+        enum Errors status_h = multiple_of_a_number(number, &result_h, &size_arr_result_h);
+
+        if(status_h == INVALID_MEMORY)
+        {
+            printf("Ошибка: ошибка работы с памятью\n");
+            if(result_h != NULL) free(result_h);
+            return INVALID_MEMORY;
+        }
+        else if (status_h == INVALID_INPUT)
+        {
+            printf("Ошибка: деление на ноль\n");
+            if(result_h != NULL) free(result_h);
+            return INVALID_INPUT;
+        }
+
+        if(size_arr_result_h == 0)
+        {
+            printf("Таких чисел нет\n");
+        }
+        else
+        {
+            printf("Массив чисел:\n");
+            for(int i = 0; i < size_arr_result_h; ++i)
+            {
+                printf("%d ", result_h[i]);
+            }
+        }
+        if(result_h != NULL) free(result_h);
+
+        break;
+
+    case 'p':
+
+        if(!is_prime(number))
+        {
+            printf("Число является простым\n");
+        }
+        else
+        {
+            printf("Число является составным\n");
+        }
+        break;
+
+    case 's':
+
+        int size_arr_result_s = (number == 0) ? 1 : log10l(labs(number));
+        char* result_s = NULL;
+        enum Errors status_s = split_number_to_digits(number, &result_s, &size_arr_result_s);
+        if(status_s == INVALID_MEMORY)
+        {
+            printf("Ошибка: ошибка работы с памятью\n");
+            if(result_s != NULL) free(result_s);
+            return INVALID_MEMORY;
+        }
+        for(int i = 0; i < size_arr_result_s; ++i)
+        {
+            printf("%c ", result_s[i]);
+        }
+        printf("\n");
+        if(result_s != NULL) free(result_s);
+
+        break;
+
+    case 'e':
+        if(number > 10 || number < 0)
+        {
+            printf("Ошибка: некорректное число\n");
+            return INVALID_INPUT;
+        }
+
+        long int** result_e = NULL;
+        if (table_of_degrees(&result_e, number) == INVALID_MEMORY)
+        {
+            printf("Ошибка: ошибка работы с памятью\n");
+            //тут ничего не делаем, я там очистила
+            return INVALID_MEMORY;
+        }
+
+
+        for(int i = 0; i < 10; i++)
+        {
+            for(int j = 0; j <= number; ++j)
+            {
+                printf("%d^%d = %ld\n", i, j, result_e[i][j]);
+            }
+            printf("\n");
+        }
+
+        for(int i = 0; i < 10; ++i) if(result_e[i] != NULL) free(result_e[i]);
+        if(result_e != NULL) free(result_e);
+
+        break;
+
+    case 'a':
+
+        long long int result_a = 0;
+        if (sum_of_numbers(number, &result_a) == INVALID_MEMORY)
+        {
+            printf("Ошибка: произошло переполнение\n");
+            return INVALID_MEMORY;
+        }
+        printf("%lld\n", result_a);
+        break;
+
+    case 'f':
+
+        unsigned long long int result_f = 1;
+        if(factorial_of_a_number(number, &result_f) == INVALID_MEMORY)
+        {
+            printf("Ошибка: произошло переполнение\n");
+            return INVALID_MEMORY;
+        }
+        printf("%llu\n", result_f);
+        break;
+
+    default:
+        printf("Ошибка: такого флага нет в доступных флагах: %s\n", argv[1]);
+        break;
     }
 
     return 0;

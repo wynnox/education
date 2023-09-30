@@ -12,15 +12,16 @@ enum Errors
 {
     OK,
     INVALID_MEMORY,
-    INVALID_INPUT
+    INVALID_INPUT,
 };
 
-int multiple_of_a_number (long int number, int** result, int* size_arr_res);
-int is_prime (long int number);
-int split_number_to_digits(long int number, char** result, int* size_arr_res);
-int sum_of_numbers (long int number, long long int * result);
-int factorial_of_a_number (long int number, unsigned long long int* result);
+enum Errors convert_str_to_int (const char *str, long int * result, int base);
 
-int count_digits(long int number);
+enum Errors multiple_of_a_number (long int number, int** result, int* size_arr_res);
+int is_prime (long int number);
+enum Errors split_number_to_digits(long int number, char** result, int* size_arr_res);
+enum Errors sum_of_numbers (long int number, long long int * result);
+enum Errors factorial_of_a_number (long int number, unsigned long long int* result);
+enum Errors table_of_degrees(long int*** result, long int number);
 
 #endif
