@@ -56,15 +56,36 @@ int main(int argc, char* argv[])
             if(input != NULL) fclose(input);
             return INVALID_INPUT;
         }
-        char * output_filename = (char*)malloc( (strlen(argv[2]) + 4) * sizeof(char) );
+
+        char * output_filename = (char*)malloc( (strlen(argv[2]) + 6) * sizeof(char) );
         if(output_filename == NULL)
         {
             printf("Ошибка: некорректный ввод\n");
-            fclose(input);
+            if(input != NULL) fclose(input);
             return INVALID_INPUT;
         }
-        strcpy(output_filename, "out_");
-        strcat(output_filename, argv[2]);
+
+        char * end_address = strchr(argv[2], '/');
+        if (end_address == NULL)
+        {
+            strcpy(output_filename, "out_");
+            strcat(output_filename, argv[2]);
+            output_filename[strlen(argv[2]) + 4] = '\0';
+        }
+        else
+        {
+            char * temp_ptr = argv[2];
+            size_t _size = strlen(argv[2]);
+            size_t shift = _size - strlen(end_address);
+            memcpy(output_filename, temp_ptr, shift);
+            temp_ptr += shift;
+            memcpy(output_filename + shift, "/out_", 5);
+            shift += 5;
+            memcpy(output_filename + shift, end_address + 1, strlen(end_address) - 1);
+            output_filename[_size + 4] = '\0';
+        }
+
+
         output = fopen(output_filename, "w");
         if(output == NULL)
         {

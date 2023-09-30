@@ -10,7 +10,7 @@ enum Errors
 {
     OK,
     INVALID_INPUT,
-    //ERROR_INPUT_FILENAME,
+    INVALID_MEMORY,
     ERROR_OPEN_FILE
 };
 
