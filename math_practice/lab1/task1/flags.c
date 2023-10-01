@@ -33,7 +33,6 @@ enum Errors multiple_of_a_number (long int number, int** result, int* size_arr_r
                 capacity *= 2;
                 int *for_realloc = realloc(*result, capacity * sizeof(int));
                 if (for_realloc == NULL) {
-                    //free(*result);
                     return INVALID_MEMORY;
                 }
                 *result = for_realloc;
@@ -52,7 +51,7 @@ int is_prime (long int number)
 
     if(number % 2 == 0) return 1;
 
-    for (int i = 3; i <= floor(sqrt(number)); i++)
+    for (int i = 3; i <= floor(sqrt(number)); i+=2)
     {
         if (number % i == 0)
             return 1;
@@ -111,7 +110,13 @@ enum Errors table_of_degrees(long int*** result, long int number)
         (*result)[i][1] = i;
     }
 
-    for(int base = 2; base <= 10; ++base)
+    for(int i = 2; i <= number; ++i)
+    {
+        (*result)[0][i] = 0;
+        (*result)[2][i] = 1;
+    }
+
+    for(int base = 0; base <= 10; ++base)
     {
         for(int degree = 2; degree <= number; ++degree)
         {
@@ -122,6 +127,7 @@ enum Errors table_of_degrees(long int*** result, long int number)
     return OK;
 
 }
+
 
 enum Errors sum_of_numbers (long int number, long long int * result)
 {
@@ -143,7 +149,8 @@ enum Errors sum_of_numbers (long int number, long long int * result)
 
 enum Errors factorial_of_a_number (long int number, unsigned long long int* result)
 {
-    for(long int i = 1; i <= number; ++i)
+    *result = 1;
+    for(long int i = 2; i <= number; ++i)
     {
         if(*result > ULLONG_MAX / i) return INVALID_MEMORY;
         *result *= i;

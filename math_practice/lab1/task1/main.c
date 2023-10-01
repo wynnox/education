@@ -101,13 +101,13 @@ int main(int argc, char* argv[])
         long int** result_e = NULL;
         if (table_of_degrees(&result_e, number) == INVALID_MEMORY)
         {
-            printf("Ошибка: ошибка работы с памятью\n");
+            printf("Ошибка: =ошибка работы с памятью\n");
             //тут ничего не делаем, я там очистила
             return INVALID_MEMORY;
         }
 
 
-        for(int i = 0; i < 10; i++)
+        for(int i = 0; i <= 10; i++)
         {
             for(int j = 0; j <= number; ++j)
             {
@@ -116,7 +116,7 @@ int main(int argc, char* argv[])
             printf("\n");
         }
 
-        for(int i = 0; i < 10; ++i) if(result_e[i] != NULL) free(result_e[i]);
+        for(int i = 0; i <= 10; ++i) if(result_e[i] != NULL) free(result_e[i]);
         if(result_e != NULL) free(result_e);
 
         break;
@@ -133,6 +133,11 @@ int main(int argc, char* argv[])
         break;
 
     case 'f':
+        if(number < 0)
+        {
+            printf("Ошибка: только положительные числа\n");
+            return INVALID_INPUT;
+        }
 
         unsigned long long int result_f = 1;
         if(factorial_of_a_number(number, &result_f) == INVALID_MEMORY)
