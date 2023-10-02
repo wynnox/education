@@ -16,14 +16,8 @@ enum errors
     OVERFLOW_ERROR
 };
 
-/*
- * исправить комменты по пути
- * потестить первые вхождения
- * просто много тестить
- */
-
 enum errors convert_str_to_ll_int (const char *str, long long int * result, int base);
 enum errors check_number_validation(char* number, int base);
-//void converting_number_to_array(long long int number, char* array);
+enum errors convert_to_base(char ** result, long long int number, int base, char * array_base);
 
 #endif
