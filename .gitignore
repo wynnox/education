@@ -1,6 +1,6 @@
 *.out
 *.o
-tests
+tests/
 *.log
 *.txt
-.idea
+.idea/
