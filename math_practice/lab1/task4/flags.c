@@ -12,6 +12,12 @@ void remove_arabic_numerals(FILE* input, FILE* output)
 
 void counter_latin_letter(FILE* input, FILE* output)
 {
+    fseek(input, 0, SEEK_END);
+        if (ftell(input) == 0) {
+        fprintf(output, "1. 0");
+        return;
+    }
+
     int c;
     long int counter_of_str = 1, counter_of_letter = 0;
     while ((c = fgetc(input)) != EOF)
@@ -27,12 +33,19 @@ void counter_latin_letter(FILE* input, FILE* output)
             counter_of_letter++;
         }
     }
+    //if() counter_of_letter++
     if(counter_of_letter != 0)
         fprintf(output, "%ld. %ld\n", counter_of_str, counter_of_letter);
 }
 
 void counter_character(FILE* input, FILE* output)
 {
+    fseek(input, 0, SEEK_END);
+    if (ftell(input) == 0) {
+        fprintf(output, "1. 0");
+        return;
+    }
+
     int c;
     long int counter_of_str = 1, counter_of_letter = 0;
     while ((c = fgetc(input)) != EOF)
