@@ -30,27 +30,33 @@ int main()
             if(flag_stop)
             {
                 char * result_number_array = NULL;
-
-                if(convert_to_base(&result_number_array, result_number, base, array_base) != OK)
+                int * base_array_for_print = (int*)malloc(5 * sizeof(int));
+                if(base_array_for_print == NULL)
                 {
-                    printf("Ошибка: я хз как на этом этапе может вылезти ошибка, наверн с памятью что-то\n");
-                    if(input_number_array != NULL) free(input_number_array);
-                    if(result_number_array != NULL) free(result_number_array);
+                    printf("Ошибка: ошибка работы с памятью\n");
                     return INVALID_MEMORY;
                 }
-                printf("%d: %s\n", base, result_number_array);
-                for(int i = 3; i < 37; i*=3)
+                base_array_for_print[0] = base;
+                base_array_for_print[1] = 9;
+                base_array_for_print[2] = 18;
+                base_array_for_print[3] = 27;
+                base_array_for_print[4] = 36;
+
+                for(int i = 0; i < 5; ++i)
                 {
-                    if(convert_to_base(&result_number_array, result_number, i, array_base) != OK)
+                    if(convert_to_base(&result_number_array, result_number, base_array_for_print[i], array_base) != OK)
                     {
                         printf("Ошибка: я хз как на этом этапе может вылезти ошибка, наверн с памятью что-то\n");
-                        if(input_number_array != NULL) free(input_number_array);
-                        if(result_number_array != NULL) free(result_number_array);
+                        free(input_number_array);
+                        free(result_number_array);
+                        free(base_array_for_print);
                         return INVALID_MEMORY;
                     }
-                    printf("%d: %s\n", i, result_number_array);
+                    printf("%d: %s\n", base_array_for_print[i], result_number_array);
+                    free(result_number_array);
+                    result_number_array = NULL;
                 }
-                if(result_number_array != NULL) free(result_number_array);
+                free(base_array_for_print);
             }
             break;
 
@@ -58,13 +64,13 @@ int main()
         if(check_number_validation(input_number_array, base) == INVALID_INPUT)
         {
             printf("Ошибка: инвалидное число %s\n", input_number_array);
-            if(input_number_array != NULL) free(input_number_array);
+            free(input_number_array);
             return INVALID_INPUT;
         }
         if(convert_str_to_ll_int(input_number_array, &input_number, base) == INVALID_INPUT)
         {
             printf("Ошибка: невалидное число %s\n", input_number_array);
-            if (input_number_array != NULL) free(input_number_array);
+            free(input_number_array);
             return INVALID_INPUT;
         }
 
@@ -76,7 +82,7 @@ int main()
         flag_stop = 1;
     }
 
-    if(input_number_array != NULL) free(input_number_array);
+    free(input_number_array);
 
     return 0;
 }
