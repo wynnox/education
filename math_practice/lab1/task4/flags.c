@@ -17,6 +17,7 @@ void counter_latin_letter(FILE* input, FILE* output)
         fprintf(output, "1. 0");
         return;
     }
+    fseek(input, 0, SEEK_SET);
 
     int c;
     long int counter_of_str = 1, counter_of_letter = 0;
@@ -33,7 +34,6 @@ void counter_latin_letter(FILE* input, FILE* output)
             counter_of_letter++;
         }
     }
-    //if() counter_of_letter++
     if(counter_of_letter != 0)
         fprintf(output, "%ld. %ld\n", counter_of_str, counter_of_letter);
 }
@@ -45,6 +45,7 @@ void counter_character(FILE* input, FILE* output)
         fprintf(output, "1. 0");
         return;
     }
+    fseek(input, 0, SEEK_SET);
 
     int c;
     long int counter_of_str = 1, counter_of_letter = 0;
