@@ -66,6 +66,7 @@ enum errors array_generation_of_task2(int start_for_generation, int end_for_gene
         (*result_array)[i] = (short)num;
         //(*result_array)[i] = (short )(rand() % (labs(end_for_genetation) + 1 - labs(start_for_generation)) + start_for_generation);
     }
+    printf("\nЛог: массив сгенерирован\n");
     return OK;
 }
 
@@ -74,17 +75,19 @@ enum errors generate_array_and_find_closest(short ** array_a, int size_of_array_
                                             short ** array_c)
 {
     (*array_c) = (short*) malloc(sizeof(short) * size_of_array_a);
-    if(array_c == NULL)
+    if (array_c == NULL)
     {
         free(array_a);
-        free(array_b);
         return INVALID_MEMORY;
     }
+    (*array_c) = (short*) malloc(sizeof(short) * size_of_array_a);
+    bubble_sort(array_b, size_of_array_b);
+    printf("\nЛог: массив b отсортирован\n");
     for(int i = 0; i < size_of_array_a; ++i)
     {
-        (*array_c)[i] = (*array_a)[i] + find_number(array_b, size_of_array_b, (*array_a)[i]);
+        (*array_c)[i] = (*array_a)[i] + find_closest(array_b, size_of_array_b, (*array_a)[i]);
     }
-
+    printf("\nЛог: массив с создан\n");
     return OK;
 }
 
@@ -101,4 +104,50 @@ int find_number(short ** array, int size_of_array, short number)
         }
     }
     return result;
+}
+
+
+void bubble_sort(short** array, int size)
+{
+    for (int i = 0; i < size - 1; i++) {
+        for (int j = 0; j < size - i - 1; j++) {
+            if (abs((*array)[j]) > abs((*array)[j+1])) {
+                int temp = (*array)[j];
+                (*array)[j] = (*array)[j+1];
+                (*array)[j+1] = temp;
+            }
+        }
+    }
+}
+
+
+short find_closest(short ** array, int size, short number)
+{
+    int low = 0, high = size - 1;
+    while (low <= high)
+    {
+        int mid = low + (high - low) / 2;
+        short diff = abs((*array)[mid]) - abs(number);
+        if(diff == 0)
+        {
+            return (*array)[mid];
+        }
+        if(diff < 0)
+        {
+            low = mid + 1;
+        }
+        else
+        {
+            high = mid - 1;
+        }
+    }
+    if(low == 0)
+    {
+        return (*array)[0];
+    }
+    if (low > 0 && abs((*array)[low] - number) < abs((*array)[low - 1] - number))
+        return (*array)[low];
+    else if (low > 0)
+        return (*array)[low - 1];
+    return 0;
 }

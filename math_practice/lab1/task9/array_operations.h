@@ -30,5 +30,7 @@ enum errors generate_array_and_find_closest(short ** array_a, int size_of_array_
                                             short ** array_b, int size_of_array_b,
                                             short ** array_c);
 int find_number(short ** array, int size_of_array, short number);
+void bubble_sort(short** arr, int size);
+short find_closest(short ** array, int size, short number);
 
 #endif
