@@ -13,6 +13,7 @@ enum Errors
 {
     OK,
     INVALID_INPUT,
+    INVALID_MEMORY,
     OVERFLOW_ERROR
 };
 
@@ -22,7 +23,6 @@ enum Errors check_triangle(double epsilon, double side1, double side2, double si
 int check_overflow_double(double* num, double epsilon);
 
 void swap(double * a, double * b);
-void permutation(double *** result, double* array, int size_array, int* count, int n, double epsilon);
-int is_duplicate(double *** result, double* array, int size_array, int count, double epsilon);
+void generation_permutation(double*** result, int size_result, int left, int right, int* count, double* array, double epsilon);
 
 #endif

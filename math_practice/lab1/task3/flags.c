@@ -52,3 +52,60 @@ enum Errors check_triangle(double epsilon, double side1, double side2, double si
 
 }
 
+void swap(double* a, double* b)
+{
+    double temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+int check_duplicate(double*** result, int size_result, int *count_array, double* array, double epsilon) {
+    int count = 0;
+    for(int i = 0; i < *count_array; ++i)
+    {
+        for(int j = 0; j < size_result; ++j)
+        {
+            if(fabs((*result)[i][j] - array[j]) < epsilon) count++;
+        }
+        if(count == size_result) return 1;
+        count = 0;
+    }
+    return 0;
+}
+
+void generation_permutation(double*** result, int size_result, int left, int right, int *count, double* array, double epsilon)
+{
+    int i;
+    if(left == right)
+    {
+        //(*count)++;
+        if(check_duplicate(result, size_result, count, array, epsilon)) return;
+
+        (*result)[*count] = (double*)malloc(size_result * sizeof(double));
+        for (int j = 0; j < size_result; ++j)
+        {
+            (*result)[*count][j] = array[j];
+            //printf("%lf ", array[j]);
+        }
+        //printf("\n");
+        (*count)++;
+    }
+    else
+    {
+        for(i = left; i <= right; i++)
+        {
+            swap(&array[left], &array[i]);
+            generation_permutation(result, size_result, left + 1, right, count, array, epsilon);
+            swap(&array[left], &array[i]);
+        }
+    }
+}
+
+/*
+ * 1 1 1
+ * 1 1 2
+ * 1 2 1
+ * 2 1 1
+ * 1 2 3
+ */
+

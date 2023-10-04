@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
 
             double epsilon_q, coefficient1, coefficient2, coefficient3 ;
             if (convert_str_to_double(argv[2], &epsilon_q) != OK ||
-                epsilon_q < 0 ||
+                epsilon_q <= 0 ||
                 convert_str_to_double(argv[3], &coefficient1) != OK ||
                 convert_str_to_double(argv[4], &coefficient2) != OK ||
                 convert_str_to_double(argv[5], &coefficient3) != OK)
@@ -33,6 +33,39 @@ int main(int argc, char* argv[])
                 return INVALID_INPUT;
             }
 
+            int size_array = 3;
+            int count_permutation = 0;
+            double** result = (double **)malloc(6 * sizeof(double *));
+            double * array_coefficient = (double*)malloc(size_array * sizeof(double));
+            if(result == NULL || array_coefficient == NULL)
+            {
+                printf(" ");
+                free(result);
+                free(array_coefficient);
+                return INVALID_MEMORY;
+            }
+            //result[0] = (double*)malloc(size_array * sizeof(double));
+//            result[0][0] = coefficient1;
+//            result[0][1] = coefficient2;
+//            result[0][2] = coefficient3;
+            array_coefficient[0] = coefficient1;
+            array_coefficient[1] = coefficient2;
+            array_coefficient[2] = coefficient3;
+            generation_permutation(&result, size_array, 0, size_array - 1, &count_permutation, array_coefficient, epsilon_q);
+            for(int i = 0; i < count_permutation; ++i)
+            {
+                for(int j = 0; j < size_array; ++j)
+                {
+                    printf("%lf ", result[i][j]);
+                }
+                printf("\n");
+            }
+            for(int i = 0; i < count_permutation; ++i)
+            {
+                free(result[i]);
+            }
+            free(array_coefficient);
+            free(result);
             break;
         case 'm':
 
