@@ -32,36 +32,7 @@ int main(int argc, char* argv[])
                 printf("Ошибка: некорректный ввод чисел\n");
                 return INVALID_INPUT;
             }
-            int size_array = 3;
-            double * array_coefficient = (double *) malloc(sizeof(double ) * size_array);
-            array_coefficient[0] = coefficient1;
-            array_coefficient[1] = coefficient2;
-            array_coefficient[2] = coefficient3;
-            int max_permutations = 6;
-            int count_permutation = 0;
-            double ** result = (double **)malloc(sizeof(double*) * max_permutations);
-            for(int i = 0; i < max_permutations; ++i)
-            {
-                result[i] = (double *) malloc(size_array * sizeof(double));
-            }
-            result[0][1] = coefficient1;
-            result[0][2] = coefficient2;
-            result[0][3] = coefficient3;
-            permutation(&result, array_coefficient, size_array, &count_permutation, size_array, epsilon_q);
 
-            for(int i = 0; i <= count_permutation; ++i)
-            {
-                for(int j = 0; j < size_array; ++j)
-                {
-                    printf("%lf ", result[i][j]);
-                }
-                printf("\n");
-            }
-
-            for(int i = 0; i < count_permutation; i++)
-                free(result[i]);
-            free(result);
-            free(array_coefficient);
             break;
         case 'm':
 
