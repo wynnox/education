@@ -44,14 +44,21 @@ int main(int argc, char* argv[])
                 free(array_coefficient);
                 return INVALID_MEMORY;
             }
-            //result[0] = (double*)malloc(size_array * sizeof(double));
-//            result[0][0] = coefficient1;
-//            result[0][1] = coefficient2;
-//            result[0][2] = coefficient3;
             array_coefficient[0] = coefficient1;
             array_coefficient[1] = coefficient2;
             array_coefficient[2] = coefficient3;
-            generation_permutation(&result, size_array, 0, size_array - 1, &count_permutation, array_coefficient, epsilon_q);
+            enum errors status = generation_permutation(&result, size_array, 0, size_array - 1, &count_permutation, array_coefficient, epsilon_q);
+            if(status != OK)
+            {
+                for(int i = 0; i < count_permutation; ++i)
+                {
+                    free(result[i]);
+                }
+                free(array_coefficient);
+                free(result);
+                printf("пук\n");
+                return INVALID_MEMORY;
+            }
             for(int i = 0; i < count_permutation; ++i)
             {
                 for(int j = 0; j < size_array; ++j)
@@ -112,7 +119,7 @@ int main(int argc, char* argv[])
             //printf("чиселки: %lf %lf %lf %lf\n", epsilon_t, side1, side2, side3);
 
             int result_t;
-            enum Errors status_t = check_triangle(epsilon_t, side1, side2, side3, &result_t);
+            enum errors status_t = check_triangle(epsilon_t, side1, side2, side3, &result_t);
             if(status_t == OVERFLOW_ERROR)
             {
                 printf("Ошибка: произошло переполение\n");
@@ -133,6 +140,5 @@ int main(int argc, char* argv[])
             printf("Ошибка: такого флага нет в доступных флагах: %s\n", argv[1]);
             return INVALID_INPUT;
     }
-
     return 0;
 }

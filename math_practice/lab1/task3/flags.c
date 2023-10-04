@@ -1,6 +1,6 @@
 #include "math_calc_with_flags.h"
 
-enum Errors convert_str_to_double (const char *str, double * result)
+enum errors convert_str_to_double (const char *str, double * result)
 {
     char *endptr;
     *result = strtod(str, &endptr);
@@ -11,7 +11,7 @@ enum Errors convert_str_to_double (const char *str, double * result)
     return OK;
 }
 
-enum Errors convert_str_to_int (const char *str, long int * result, int base)
+enum errors convert_str_to_int (const char *str, long int * result, int base)
 {
     char *endptr;
     *result = strtol(str, &endptr, base);
@@ -33,7 +33,7 @@ int check_overflow_double(double* num, double epsilon)
     return fabs(*num - fabs(DBL_MAX / *num)) > epsilon;
 }
 
-enum Errors check_triangle(double epsilon, double side1, double side2, double side3, int * result)
+enum errors check_triangle(double epsilon, double side1, double side2, double side3, int * result)
 {
     if(!check_overflow_double(&side1, epsilon) || !check_overflow_double(&side2, epsilon) || !check_overflow_double(&side3, epsilon))
         return OVERFLOW_ERROR;
@@ -59,7 +59,8 @@ void swap(double* a, double* b)
     *b = temp;
 }
 
-int check_duplicate(double*** result, int size_result, int *count_array, double* array, double epsilon) {
+int check_duplicate(double*** result, int size_result, int *count_array, double* array, double epsilon)
+{
     int count = 0;
     for(int i = 0; i < *count_array; ++i)
     {
@@ -73,39 +74,35 @@ int check_duplicate(double*** result, int size_result, int *count_array, double*
     return 0;
 }
 
-void generation_permutation(double*** result, int size_result, int left, int right, int *count, double* array, double epsilon)
+enum errors generation_permutation(double*** result, int size_result, int left, int right, int *count, double* array, double epsilon)
 {
+    enum errors status;
     int i;
     if(left == right)
     {
-        //(*count)++;
-        if(check_duplicate(result, size_result, count, array, epsilon)) return;
-
+        if(check_duplicate(result, size_result, count, array, epsilon)) return OK;
         (*result)[*count] = (double*)malloc(size_result * sizeof(double));
+        if ((*result)[*count] == NULL)
+        {
+            return INVALID_MEMORY;
+        }
+        status = OK;
         for (int j = 0; j < size_result; ++j)
         {
             (*result)[*count][j] = array[j];
-            //printf("%lf ", array[j]);
         }
-        //printf("\n");
         (*count)++;
     }
     else
     {
+        status = OK;
         for(i = left; i <= right; i++)
         {
             swap(&array[left], &array[i]);
-            generation_permutation(result, size_result, left + 1, right, count, array, epsilon);
+            status = generation_permutation(result, size_result, left + 1, right, count, array, epsilon);
             swap(&array[left], &array[i]);
         }
     }
+    return status;
 }
-
-/*
- * 1 1 1
- * 1 1 2
- * 1 2 1
- * 2 1 1
- * 1 2 3
- */
 

@@ -9,7 +9,7 @@
 #include <math.h>
 #include <stdbool.h>
 
-enum Errors
+enum errors
 {
     OK,
     INVALID_INPUT,
@@ -17,12 +17,13 @@ enum Errors
     OVERFLOW_ERROR
 };
 
-enum Errors convert_str_to_double (const char *str, double * result);
-enum Errors convert_str_to_int (const char *str, long int * result, int base);
-enum Errors check_triangle(double epsilon, double side1, double side2, double side3, int* result);
+enum errors convert_str_to_double (const char *str, double * result);
+enum errors convert_str_to_int (const char *str, long int * result, int base);
+enum errors check_triangle(double epsilon, double side1, double side2, double side3, int* result);
 int check_overflow_double(double* num, double epsilon);
 
 void swap(double * a, double * b);
-void generation_permutation(double*** result, int size_result, int left, int right, int* count, double* array, double epsilon);
+int check_duplicate(double*** result, int size_result, int *count_array, double* array, double epsilon);
+enum errors generation_permutation(double*** result, int size_result, int left, int right, int* count, double* array, double epsilon);
 
 #endif
