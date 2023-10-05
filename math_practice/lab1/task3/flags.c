@@ -30,9 +30,9 @@ enum errors convert_str_to_int (const char *str, long int * result, int base)
 
 int check_overflow_double(double* num1, double* num2, double epsilon)
 {
-    if (*num1 > epsilon && *num2 - DBL_MAX / *num1 > epsilon) return 1;
-    if (*num1 < epsilon && *num2 - DBL_MIN / *num1 < epsilon) return 1;
-    return 0;
+    epsilon *= 1;
+    double result = *num1 * *num2;
+    return (result <= DBL_MAX && result >= -DBL_MAX);
 }
 
 enum errors check_triangle(double epsilon, double side1, double side2, double side3, int * result)
