@@ -28,14 +28,16 @@ enum errors convert_str_to_int (const char *str, long int * result, int base)
     return OK;
 }
 
-int check_overflow_double(double* num, double epsilon)
+int check_overflow_double(double* num1, double* num2, double epsilon)
 {
-    return fabs(*num - fabs(DBL_MAX / *num)) > epsilon;
+    if (*num1 > epsilon && *num2 - DBL_MAX / *num1 > epsilon) return 1;
+    if (*num1 < epsilon && *num2 - DBL_MIN / *num1 < epsilon) return 1;
+    return 0;
 }
 
 enum errors check_triangle(double epsilon, double side1, double side2, double side3, int * result)
 {
-    if(!check_overflow_double(&side1, epsilon) || !check_overflow_double(&side2, epsilon) || !check_overflow_double(&side3, epsilon))
+    if(!check_overflow_double(&side1, &side1, epsilon) || !check_overflow_double(&side2, &side2, epsilon) || !check_overflow_double(&side3, &side3, epsilon))
         return OVERFLOW_ERROR;
 
     if (side1 <= epsilon || side2 <= epsilon || side3 <= epsilon)
@@ -98,9 +100,9 @@ enum errors generation_permutation(double*** result, int size_result, int left, 
         status = OK;
         for(i = left; i <= right; i++)
         {
-            swap(&array[left], &array[i]);
+            swap(array + left, array + i);
             status = generation_permutation(result, size_result, left + 1, right, count, array, epsilon);
-            swap(&array[left], &array[i]);
+            swap(array + left, array + i);
         }
     }
     return status;

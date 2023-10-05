@@ -20,7 +20,7 @@ enum errors
 enum errors convert_str_to_double (const char *str, double * result);
 enum errors convert_str_to_int (const char *str, long int * result, int base);
 enum errors check_triangle(double epsilon, double side1, double side2, double side3, int* result);
-int check_overflow_double(double* num, double epsilon);
+int check_overflow_double(double* num1, double* num2, double epsilon);
 
 void swap(double * a, double * b);
 int check_duplicate(double*** result, int size_result, int *count_array, double* array, double epsilon);
