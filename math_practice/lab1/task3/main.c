@@ -59,102 +59,20 @@ int main(int argc, char* argv[])
                 printf("пук\n");
                 return INVALID_MEMORY;
             }
-            for(int i = 0; i < count_permutation; ++i)
-            {
+            for(int i = 0; i < count_permutation; ++i) {
                 printf("уравнение %d: %lfx^2 %+lfx %+lf\n", i + 1, result[i][0], result[i][1], result[i][2]);
                 double a = result[i][0];
                 double b = result[i][1];
                 double c = result[i][2];
-                double coef = 0;
-                if(!check_overflow_double(&b, &b, epsilon_q))
-                {
-                    printf("переполнение\n");
-                    for(int i = 0; i < count_permutation; ++i)
-                    {
-                        free(result[i]);
-                    }
-                    free(array_coefficient);
-                    free(result);
-                    return OVERFLOW_ERROR;
-                }
-                b *= b;
-                if( !check_overflow_double(&a, &c, epsilon_q) )
-                {
-                    printf("переполнение\n");
-                    for(int i = 0; i < count_permutation; ++i)
-                    {
-                        free(result[i]);
-                    }
-                    free(array_coefficient);
-                    free(result);
-                    return OVERFLOW_ERROR;
-                }
-                double temp = a * c;
-                coef = 4.0;
-                if(  !check_overflow_double(&temp, &coef, epsilon_q) )
-                {
-                    printf("переполнение\n");
-                    for(int i = 0; i < count_permutation; ++i)
-                    {
-                        free(result[i]);
-                    }
-                    free(array_coefficient);
-                    free(result);
-                    return OVERFLOW_ERROR;
-
-                }
-                double discriminant = b - 4.0 * temp;
-                coef = 2.0;
-                if( !check_overflow_double(&a, &coef, epsilon_q))
-                {
-                    printf("переполнение\n");
-                    for(int i = 0; i < count_permutation; ++i)
-                    {
-                        free(result[i]);
-                    }
-                    free(array_coefficient);
-                    free(result);
-                    return OVERFLOW_ERROR;
-
-                }
-                if(discriminant < epsilon_q)
+                double discriminant = b * b - 4.0 * a * c;
+                if (discriminant < 0)
                 {
                     printf("действительных корней нет\n");
-                }
-                else if(discriminant < -epsilon_q)
-                {
-                    double x = b / (2.0 * a);
-                    printf("x = %lf\n", x);
                 }
                 else
                 {
                     discriminant = sqrt(discriminant);
                     b *= -1.0;
-                    coef = -1.0;
-                    if (!check_overflow_double(&b, &coef, epsilon_q))
-                    {
-                        printf("переполнение\n");
-                        for(int i = 0; i < count_permutation; ++i)
-                        {
-                            free(result[i]);
-                        }
-                        free(array_coefficient);
-                        free(result);
-                        return OVERFLOW_ERROR;
-
-                    }
-                    if(  fabs(discriminant - fabs(DBL_MAX / b)) < epsilon_q )
-                    {
-                        printf("переполнение\n");
-                        for(int i = 0; i < count_permutation; ++i)
-                        {
-                            free(result[i]);
-                        }
-                        free(array_coefficient);
-                        free(result);
-                        return OVERFLOW_ERROR;
-
-                    }
                     double x1 = (b - discriminant) / (2.0 * a);
                     double x2 = (b + discriminant) / (2.0 * a);
                     printf("x1 = %lf\n", x1);
@@ -162,7 +80,6 @@ int main(int argc, char* argv[])
                 }
                 printf("\n");
             }
-
 
             for(int i = 0; i < count_permutation; ++i)
             {

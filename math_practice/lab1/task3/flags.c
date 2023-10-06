@@ -32,7 +32,7 @@ int check_overflow_double(double* num1, double* num2, double epsilon)
 {
     epsilon *= 1;
     double result = *num1 * *num2;
-    return (result <= DBL_MAX && result >= -DBL_MAX);
+    return (result - DBL_MAX <= epsilon && result + DBL_MAX >= epsilon);
 }
 
 enum errors check_triangle(double epsilon, double side1, double side2, double side3, int * result)
