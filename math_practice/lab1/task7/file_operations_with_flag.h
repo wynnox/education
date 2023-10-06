@@ -16,5 +16,9 @@ enum errors
 
 enum errors read_input_from_file_into_array(FILE ** input, char** buff, int* len);
 
+void convert_to_lowercase_and_base4(char** array, int len, short ** result);
+void convert_to_lowercase(char** array, int len);
+void convert_to_ascii_base8(char** array, int len, short ** result);
+
 
 #endif
