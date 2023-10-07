@@ -17,13 +17,13 @@ enum errors
     OVERFLOW_ERROR
 };
 
-enum errors convert_str_to_double (const char *str, double * result);
+enum errors convert_str_to_double (const char *str, long double * result);
 enum errors convert_str_to_int (const char *str, long int * result, int base);
-enum errors check_triangle(double epsilon, double side1, double side2, double side3, int* result);
-int check_overflow_double(double* num1, double* num2, double epsilon);
+enum errors check_triangle(long double epsilon, long double side1, long double side2, long double side3, int* result);
+int check_overflow_double(long double* num1, long double* num2, long double epsilon);
 
-void swap(double * a, double * b);
-int check_duplicate(double*** result, int size_result, int *count_array, double* array, double epsilon);
-enum errors generation_permutation(double*** result, int size_result, int left, int right, int* count, double* array, double epsilon);
+void swap(long double * a, long double * b);
+int check_duplicate(long double*** result, int size_result, int *count_array, long double* array, long double epsilon);
+enum errors generation_permutation(long double*** result, int size_result, int left, int right, int* count, long double* array, long double epsilon);
 
 #endif

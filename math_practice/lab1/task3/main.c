@@ -13,6 +13,8 @@ int main(int argc, char* argv[])
         return INVALID_INPUT;
     }
 
+    errno = 0;
+
     switch (argv[1][1])
     {
         case 'q':
@@ -22,7 +24,7 @@ int main(int argc, char* argv[])
                 return INVALID_INPUT;
             }
 
-            double epsilon_q, coefficient1, coefficient2, coefficient3 ;
+            long double epsilon_q, coefficient1, coefficient2, coefficient3 ;
             if (convert_str_to_double(argv[2], &epsilon_q) != OK ||
                 epsilon_q <= 0 ||
                 convert_str_to_double(argv[3], &coefficient1) != OK ||
@@ -35,8 +37,8 @@ int main(int argc, char* argv[])
 
             int size_array = 3;
             int count_permutation = 0;
-            double** result = (double **)malloc(6 * sizeof(double *));
-            double * array_coefficient = (double*)malloc(size_array * sizeof(double));
+            long double** result = (long double **)malloc(6 * sizeof(long double *));
+            long double * array_coefficient = (long double*)malloc(size_array * sizeof(long double));
             if(result == NULL || array_coefficient == NULL)
             {
                 printf(" ");
@@ -60,11 +62,11 @@ int main(int argc, char* argv[])
                 return INVALID_MEMORY;
             }
             for(int i = 0; i < count_permutation; ++i) {
-                printf("уравнение %d: %lfx^2 %+lfx %+lf\n", i + 1, result[i][0], result[i][1], result[i][2]);
-                double a = result[i][0];
-                double b = result[i][1];
-                double c = result[i][2];
-                double discriminant = b * b - 4.0 * a * c;
+                printf("уравнение %d: %Lfx^2 %+Lfx %+Lf\n", i + 1, result[i][0], result[i][1], result[i][2]);
+                long double a = result[i][0];
+                long double b = result[i][1];
+                long double c = result[i][2];
+                long double discriminant = b * b - 4.0 * a * c;
                 if (discriminant < 0)
                 {
                     printf("действительных корней нет\n");
@@ -73,10 +75,10 @@ int main(int argc, char* argv[])
                 {
                     discriminant = sqrt(discriminant);
                     b *= -1.0;
-                    double x1 = (b - discriminant) / (2.0 * a);
-                    double x2 = (b + discriminant) / (2.0 * a);
-                    printf("x1 = %lf\n", x1);
-                    printf("x2 = %lf\n", x2);
+                    long double x1 = (b - discriminant) / (2.0 * a);
+                    long double x2 = (b + discriminant) / (2.0 * a);
+                    printf("x1 = %Lf\n", x1);
+                    printf("x2 = %Lf\n", x2);
                 }
                 printf("\n");
             }
@@ -120,7 +122,7 @@ int main(int argc, char* argv[])
                 printf("Ошибка: некорректный ввод\n");
                 return INVALID_INPUT;
             }
-            double epsilon_t, side1, side2, side3;
+            long double epsilon_t, side1, side2, side3;
             if (convert_str_to_double(argv[2], &epsilon_t) != OK ||
                 epsilon_t <= 0 ||
                 convert_str_to_double(argv[3], &side1) != OK ||
@@ -130,7 +132,7 @@ int main(int argc, char* argv[])
                 printf("Ошибка: некорректный ввод значений\n");
                 return INVALID_INPUT;
             }
-            //printf("чиселки: %lf %lf %lf %lf\n", epsilon_t, side1, side2, side3);
+            //printf("чиселки: %Lf %Lf %Lf %Lf\n", epsilon_t, side1, side2, side3);
 
             int result_t;
             enum errors status_t = check_triangle(epsilon_t, side1, side2, side3, &result_t);
