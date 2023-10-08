@@ -37,6 +37,7 @@ enum errors registration_or_authorization(FILE * output_file, User * user_data, 
     int len_buff = 0;
     int password = -1;
     (*index_user) = -1;
+
     switch (flag)
     {
     case 1:
@@ -63,8 +64,6 @@ enum errors registration_or_authorization(FILE * output_file, User * user_data, 
                 return INVALID_INPUT;
             }
         }
-        printf("Введенный пользователь: %s\n", buffer);
-
         for(int i = 0; i < *count_users; ++i)
         {
             if(!strcmp(user_data[i].login, buffer))
@@ -122,7 +121,6 @@ enum errors registration_or_authorization(FILE * output_file, User * user_data, 
                 return INVALID_INPUT;
             }
         }
-        printf("Введенный пользователь: %s\n", buffer);
 
         if(*capacity_user_data == *count_users)
         {
@@ -167,12 +165,31 @@ enum errors registration_or_authorization(FILE * output_file, User * user_data, 
         user_data[*count_users].limit_request = 0;
         fprintf(output_file,"%d\n", 0);
 
+        *index_user = *count_users;
         (*count_users)++;
+
         printf("Вы успешно зарегестрированы\n");
         break;
     default:
         printf("нет такой команды\n");
+        return INVALID_INPUT;
     }
     free(buffer);
     return OK;
+}
+
+void command()
+{
+    printf("Доступные комманды:\n"
+           "1) Time - запрос текущего времени в стандартном формате чч:мм:сс;\n"
+           "2) Date - запрос текущей даты в стандартном формате дд:мм:гггг;\n"
+           "3) Howmuch <time> flag - запрос прошедшего времени с указанной даты в\n"
+           "параметре <time>, параметр flag определяет тип представления результата\n"
+           "(-s в секундах, -m в минутах, -h в часах, -y в годах)\n"
+           "4) Logout - выйти в меню авторизации\n"
+           "5) Sanctions username <number> - команда позволяет ввести ограничения на работу\n"
+           "с оболочкой для пользователя username, а именно данный пользователь не может\n"
+           "в одном сеансе выполнить более <number> запросов. Для подтверждения\n"
+           "ограничений после ввода команды необходимо ввести значение 12345.\n"
+           "6) Exit - выход из интрепретатора командной строки\n");
 }
