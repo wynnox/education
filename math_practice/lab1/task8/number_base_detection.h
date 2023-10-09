@@ -9,12 +9,12 @@
 
 
 enum errors
-        {
+{
     OK,
     INVALID_INPUT,
     INVALID_MEMORY,
     ERROR_OPEN_FILE
-        };
+};
 
 enum errors read_write_file(FILE** input, FILE** output);
 enum errors convert_str_to_ll_int (const char *str, long long int * result, int base);
