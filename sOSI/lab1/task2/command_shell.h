@@ -23,7 +23,6 @@ typedef struct {
     int limit_request;
 } User;
 
-//enum errors reading_users_from_file(FILE ** input_file, User ** user_data, int* count_users, int * capacity_user_data);
 enum errors reading_users_from_file(FILE * input_file, User * user_data, int* count_users, int * capacity_user_data);
 enum errors registration_or_authorization(FILE * output_file, User * user_data, int* count_users, int * capacity_user_data, int * index_user);
 void command();
