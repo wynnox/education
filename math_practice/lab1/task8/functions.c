@@ -52,7 +52,7 @@ enum errors read_input_from_file_into_array(FILE ** input, char** buff, int* len
         else if(isalpha(symbol))
         {
             (*buff)[(*len)++] = (char)toupper(symbol);
-            if(toupper(symbol) - 'A' + 1 > *min_base)
+            if(toupper(symbol) - 'A' + 10 + 1 > *min_base)
             {
                 *min_base = toupper(symbol) - 'A' + 10 + 1;
             }
