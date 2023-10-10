@@ -41,10 +41,16 @@ int main(int argc, char* argv[])
         }
         if(len > 0)
         {
+            long long int number_base10 = 0;
+            if (convert_str_to_ll_int(buffer, &number_base10, min_base) != OK)
+            {
+                if (input != NULL) fclose(input);
+                if (output != NULL) fclose(output);
+                free(buffer);
+                return INVALID_INPUT;
+            }
             fprintf(output, "входное число: %s\n", buffer);
             fprintf(output, "минимальное основание: %d\n", min_base);
-            long long int number_base10 = 0;
-            convert_str_to_ll_int(buffer, &number_base10, min_base);
             fprintf(output, "число в 10 сс: %lld\n", number_base10);
             fprintf(output, "\n");
         }
