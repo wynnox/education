@@ -15,38 +15,18 @@ int main (int argc, char* argv[])
         printf("Ошибка: инвалидный инпут");
         return INVALID_INPUT;
     }
-    double a = 0.0, b = 1.0, previous_result = 0.0, result = 0.0;
-    int n = 1;
-    do {
-        previous_result = result;
-        result = rectangle_method(a, b, n, epsilon, integral_a);
-        n *= 2;
-    } while (fabs(result - previous_result) > epsilon);
-    printf("a: %lf\n", result);
 
-    a = 0.0, b = 1.0, previous_result = 0.0, result = 0.0, n = 1;
-    do {
-        previous_result = result;
-        result = rectangle_method(a, b, n, epsilon, integral_b);
-        n *= 2;
-    } while (fabs(result - previous_result) > epsilon);
-    printf("b: %lf\n", result);
+    double result_a = integral(epsilon, integral_a);
+    printf("a: %lf\n", result_a);
 
-    a = 0.0, b = 1.0, previous_result = 0.0, result = 0.0, n = 1;
-    do {
-        previous_result = result;
-        result = rectangle_method(a, b, n, epsilon, integral_c);
-        n *= 2;
-    } while (fabs(result - previous_result) > epsilon);
-    printf("c: %lf\n", result);
+    double result_b = integral(epsilon, integral_b);
+    printf("b: %lf\n", result_b);
 
-    a = 0.0, b = 1.0, previous_result = 0.0, result = 0.0, n = 1;
-    do {
-        previous_result = result;
-        result = rectangle_method(a, b, n, epsilon, integral_d);
-        n *= 2;
-    } while (fabs(result - previous_result) > epsilon);
-    printf("d: %lf\n", result);
+    double result_c = integral(epsilon, integral_c);
+    printf("c: %lf\n", result_c);
+
+    double result_d = integral(epsilon, integral_d);
+    printf("d: %lf\n", result_d);
 
     return 0;
 }

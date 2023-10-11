@@ -17,6 +17,7 @@ enum errors
 
 enum errors convert_str_to_double (const char *str, double * result);
 double rectangle_method(double a, double b, int n, double epsilon, double (*f)(double));
+double integral (double epsilon, double (*f)(double));
 double integral_a(double x);
 double integral_b(double x);
 double integral_c(double x);
