@@ -111,4 +111,3 @@ enum errors generation_permutation(long double*** result, int size_result, int l
     }
     return status;
 }
-
