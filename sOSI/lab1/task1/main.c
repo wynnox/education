@@ -23,6 +23,7 @@ int main(int argc, char* argv[])
     if(buffer == NULL)
     {
         printf("ошибка при выделении памяти\n");
+        if(input != NULL) fclose(input);
         return 1;
     }
 
@@ -41,6 +42,7 @@ int main(int argc, char* argv[])
     if(fwrite(buffer, sizeof(unsigned char), bufferSize, input) != bufferSize)
     {
         printf("ошибка при записи в файл\n");
+        if(input != NULL) fclose(input);
         free(buffer);
         return 1;
     }
@@ -62,6 +64,14 @@ int main(int argc, char* argv[])
         printf("%u\n", byte);
         printf("_fileno: %d\n _flags: %d\n _flags2: %d\n _mode: %d\n _shortbuf: %s\n _unused2: %s\n _vtable_offset: %u\n",
                input->_fileno, input->_flags, input->_flags2, input->_mode, input->_shortbuf, input->_unused2, input->_vtable_offset);
+    }
+
+    if(ferror(input))
+    {
+        printf("ошибка при чтении из файла\n");
+        if(input != NULL) fclose(input);
+        free(buffer);
+        return 2;
     }
 
     if(input != NULL) fclose(input);
@@ -98,6 +108,7 @@ int main(int argc, char* argv[])
     {
         printf("%u", buf[i]);
     }
+    printf("\n");
 
     if(input != NULL) fclose(input);
     free(buf);
