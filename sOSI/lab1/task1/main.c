@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 int main(int argc, char* argv[])
 {
@@ -46,14 +47,21 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    char buf[5];
+    char* buf = (char *)malloc(sizeof(char) * 4);
+    if (buf == NULL)
+    {
+        printf("ошибка при работе с памятью\n");
+        fclose(input);
+        return 1;
+    }
     fseek(input, 3, SEEK_SET);
-    if(fread(&buf, sizeof(char), 4, input) != 4)
+    if(fread(buf, sizeof(char), sizeof(buf), input) != sizeof(buf))
     {
         printf("ошибка при считывании байтов из файла\n");
         return 1;
     }
     printf("%s", buf);
     fclose(input);
+    free(buf);
     return 0;
 }
