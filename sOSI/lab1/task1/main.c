@@ -55,12 +55,18 @@ int main(int argc, char* argv[])
         return 1;
     }
     fseek(input, 3, SEEK_SET);
-    if(fread(buf, sizeof(char), sizeof(buf), input) != sizeof(buf))
+    if(fread(buf, sizeof(char), 4, input) != 4)
     {
         printf("ошибка при считывании байтов из файла\n");
+        fclose(input);
+        free(buf);
         return 1;
     }
-    printf("%s", buf);
+//    printf("%s", buf);
+    for (int i = 0; i < 4; ++i)
+    {
+        printf("%c", buf[i]);
+    }
     fclose(input);
     free(buf);
     return 0;
