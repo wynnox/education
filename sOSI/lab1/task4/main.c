@@ -57,8 +57,21 @@ int main(int argc, char* argv[])
             if(input != NULL) fclose(input);
             return INVALID_INPUT;
         }
-//        unsigned int result_mask;
-
+        unsigned int mask;
+        if(convert_str_to_int(argv[3], &mask, 16) != OK)
+        {
+            printf("некорректная маска\n");
+            if(input != NULL) fclose(input);
+            return INVALID_INPUT;
+        }
+        int count_result;
+        if(count_xor_mask_file(input, &mask, &count_result) != OK)
+        {
+            printf("произошла ошибка при вычислении\n");
+            if(input != NULL) fclose(input);
+            return ERROR_READ_FILE;
+        }
+        printf("количество чисел в файле, которые соответствуют маске %s(%u): %u\n", argv[3], mask,  count_result);
     }
     else
     {
