@@ -14,7 +14,6 @@ int main(int argc, char* argv[])
         printf("не получилось открыть файл\n");
         return ERROR_OPEN_FILE;
     }
-
     if(strcmp(argv[2], "xor8") == 0)
     {
         if(argc != 3)
@@ -22,6 +21,12 @@ int main(int argc, char* argv[])
             printf("невалидное число аргументов\n");
             fclose(input);
             return INVALID_INPUT;
+        }
+        if(feof(input) == 0)
+        {
+            printf("пустой файл\n");
+            fclose(input);
+            return ERROR_READ_FILE;
         }
         unsigned int result_xor8;
         if (xor8_file(input, &result_xor8) != OK)
@@ -39,6 +44,12 @@ int main(int argc, char* argv[])
             printf("невалидное число аргументов\n");
             fclose(input);
             return INVALID_INPUT;
+        }
+        if(feof(input) == 0)
+        {
+            printf("пустой файл\n");
+            fclose(input);
+            return ERROR_READ_FILE;
         }
         size_t size_group = 4;
         unsigned char* group = (unsigned char *)malloc(sizeof(unsigned char) * size_group);
@@ -69,6 +80,12 @@ int main(int argc, char* argv[])
             printf("невалидное число аргументов\n");
             fclose(input);
             return INVALID_INPUT;
+        }
+        if(feof(input) == 0)
+        {
+            printf("пустой файл\n");
+            fclose(input);
+            return ERROR_READ_FILE;
         }
         if(check_mask_validation(&argv[3]) != OK)
         {
