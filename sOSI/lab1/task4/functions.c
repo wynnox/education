@@ -66,7 +66,7 @@ enum errors xor32_file(FILE* input, unsigned char ** group, size_t size_group)
     }
     if(ferror(input))
     {
-        free(group);
+        free(buffer);
         return ERROR_READ_FILE;
     }
     free(buffer);
