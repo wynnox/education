@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
     if(buffer == NULL)
     {
         printf("ошибка при выделении памяти\n");
-        if(input != NULL) fclose(input);
+        fclose(input);
         return 1;
     }
 
@@ -42,13 +42,13 @@ int main(int argc, char* argv[])
     if(fwrite(buffer, sizeof(unsigned char), bufferSize, input) != bufferSize)
     {
         printf("ошибка при записи в файл\n");
-        if(input != NULL) fclose(input);
+        fclose(input);
         free(buffer);
         return 1;
     }
 
     // закрытие файла и побайтовое чтение с выводом полей структуры
-    if(input != NULL) fclose(input);
+    fclose(input);
 
     input = fopen(argv[1], "rb");
     if(input == NULL)
@@ -69,12 +69,12 @@ int main(int argc, char* argv[])
     if(ferror(input))
     {
         printf("ошибка при чтении из файла\n");
-        if(input != NULL) fclose(input);
+        fclose(input);
         free(buffer);
         return 2;
     }
 
-    if(input != NULL) fclose(input);
+    fclose(input);
 
     //открытие файла, перемещение указателя и считывание 4 байта из файла в буфер
     input = fopen(argv[1], "rb");
@@ -90,7 +90,7 @@ int main(int argc, char* argv[])
     if (buf == NULL)
     {
         printf("ошибка при работе с памятью\n");
-        if(input != NULL) fclose(input);
+        fclose(input);
         free(buffer);
         return 1;
     }
@@ -98,7 +98,7 @@ int main(int argc, char* argv[])
     if(fread(buf, sizeof(unsigned char), bufSize, input) != bufSize)
     {
         printf("ошибка при считывании байтов из файла\n");
-        if(input != NULL) fclose(input);
+        fclose(input);
         free(buffer);
         free(buf);
         return 1;
@@ -110,7 +110,7 @@ int main(int argc, char* argv[])
     }
     printf("\n");
 
-    if(input != NULL) fclose(input);
+    fclose(input);
     free(buf);
     free(buffer);
     return 0;
