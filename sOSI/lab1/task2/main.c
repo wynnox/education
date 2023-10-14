@@ -8,7 +8,7 @@ int main(int argc, char* argv[])
          return INVALID_INPUT;
     }
 
-    FILE * user_data_file = fopen(argv[1], "r+");
+    FILE * user_data_file = fopen(argv[1], "r");
     if(user_data_file == NULL)
     {
         printf("Произошла ошибка, повторите ошибку позже или обратитесь к админитратору\n");
@@ -25,8 +25,9 @@ int main(int argc, char* argv[])
         return ERROR_OPEN_FILE;
     }
 
-    if (reading_users_from_file(user_data_file, user_data,
-                                &count_users, &capacity_user_data) != OK)
+    int status = reading_users_from_file(user_data_file, user_data,
+                                         &count_users, &capacity_user_data);
+    if (status == INVALID_INPUT)
     {
         printf("Произошла ошибка, повторите ошибку позже или обратитесь к админитратору\n");
         if(user_data_file != NULL) fclose(user_data_file);
@@ -38,7 +39,7 @@ int main(int argc, char* argv[])
     int index_user = -1;
     if(registration_or_authorization(user_data_file, user_data,
                                      &count_users, &capacity_user_data,
-                                     &index_user) != OK)
+                                     &index_user, &status) != OK)
     {
         if(user_data_file != NULL) fclose(user_data_file);
         free(user_data);
@@ -69,15 +70,19 @@ int main(int argc, char* argv[])
     while (1)
     {
         printf("%s@nncl:~$ ", user_data[index_user].login);
-        if(user_data[index_user].limit_request == count_limit)
+        if (scanf("%20s", command_user) == EOF)
         {
+            printf("пук\n");
             break;
         }
-        scanf("%20s", command_user);
         if(strcmp(command_user, "Time") == 0)
         {
             time_t mytime = time(NULL);
-            // если вернулось -1 то время недоступно
+            if(mytime == -1)
+            {
+                printf("%s@nncl:~$ невозможно получить время\n", user_data[index_user].login);
+                continue;
+            }
             struct tm *now = localtime(&mytime);
             printf("%s@nncl:~$ %02d:%02d:%02d\n", user_data[index_user].login, now->tm_hour, now->tm_min, now->tm_sec);
         }
@@ -94,12 +99,12 @@ int main(int argc, char* argv[])
             if (scanf("%d.%d.%d -%c", &day, &month, &year, &flag) != 4)
             {
                 printf("%s@nncl:~$ некорректная дата\n", user_data[index_user].login);
-                break;
+                continue;
             }
-            if(day < 0 && month < 0 && year < 0)
+            if(day < 0 || month < 0 || year < 0)
             {
                 printf("%s@nncl:~$ некорректная дата\n", user_data[index_user].login);
-                break;
+                continue;
             }
 
             time_t mytime = time(NULL);
@@ -115,7 +120,6 @@ int main(int argc, char* argv[])
 
             double diff_second = difftime(mytime, user_time);
             double diff_time;
-            //проверить на положительное значение, потому что да
             switch (flag)
             {
                 case 's':
@@ -143,7 +147,7 @@ int main(int argc, char* argv[])
         {
             if(registration_or_authorization(user_data_file, user_data,
                                              &count_users, &capacity_user_data,
-                                             &index_user) != OK)
+                                             &index_user, &status) != OK)
             {
                 if(user_data_file != NULL) fclose(user_data_file);
                 free(user_data);
@@ -158,7 +162,7 @@ int main(int argc, char* argv[])
             if(scanf("%20s", buffer) != 1)
             {
                 printf("%s@nncl:~$ некорректный ввод\n", user_data[index_user].login);
-
+                continue;
             }
             int temp_index = -1;
             for(int i = 0; i < count_users; ++i)
@@ -172,11 +176,34 @@ int main(int argc, char* argv[])
             if(temp_index == -1)
             {
                 printf("%s@nncl:~$ пользователя %s нет\n", user_data[index_user].login, buffer);
-                break;
+                continue;
+            }
+            int new_limit;
+            if (scanf("%d", &new_limit) != 1)
+            {
+                printf("%s@nncl:~$ неверный формат лимита\n", user_data[index_user].login);
+                continue;
             }
 
-
-
+            printf("%s@nncl:~$ введите пароль: ", user_data[index_user].login);
+            int password = 12345;
+            int user_pass_for_limit;
+            if (scanf("%d", &user_pass_for_limit) != 1)
+            {
+                printf("\n%s@nncl:~$ неверный пароль\n", user_data[index_user].login);
+                continue;
+            }
+            if (password != user_pass_for_limit)
+            {
+                printf("\n%s@nncl:~$ неверный пароль\n", user_data[index_user].login);
+                continue;
+            }
+            user_data[temp_index].limit_request = new_limit;
+            printf("%s@nncl:~$ новый лимит для пользователя %s установлен\n", user_data[index_user].login, buffer);
+            if (strcmp(user_data[index_user].login, buffer) == 0)
+            {
+                count_limit = 0;
+            }
         }
         else if(strcmp(command_user, "Exit") == 0)
         {
@@ -184,7 +211,12 @@ int main(int argc, char* argv[])
         }
         else
         {
-            printf("такой команды нет\n");
+            printf("%s@nncl:~$ такой команды нет\n", user_data[index_user].login);
+            continue;
+        }
+        if(user_data[index_user].limit_request == count_limit)
+        {
+            break;
         }
         count_limit++;
     }
@@ -194,6 +226,18 @@ int main(int argc, char* argv[])
         printf("Достигнут лимит запросов\n");
     }
 
+    fclose(user_data_file);
+    user_data_file = fopen(argv[1], "w");
+    if (user_data_file == NULL)
+    {
+        free(user_data);
+        free(command_user);
+        free(buffer);
+        return ERROR_OPEN_FILE;
+    }
+
+
+    writing_users_in_file(user_data_file, user_data, &count_users);
     if(user_data_file != NULL) fclose(user_data_file);
     free(user_data);
     free(command_user);

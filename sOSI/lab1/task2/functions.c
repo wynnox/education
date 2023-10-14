@@ -3,7 +3,6 @@
 enum errors reading_users_from_file(FILE * input_file, User * user_data, int* count_users, int * capacity_user_data)
 {
     *count_users = 0;
-    //вообще не оч делаю, но как есть, считаю, что уже в файле всё валидно
     while(fscanf(input_file, "%6s%d%d", user_data[*count_users].login, &user_data[*count_users].pin, &user_data[*count_users].limit_request) == 3)
     {
         (*count_users)++;
@@ -19,19 +18,31 @@ enum errors reading_users_from_file(FILE * input_file, User * user_data, int* co
             user_data = for_realloc;
         }
     }
+    if(*count_users == 0) return EMPTY_FILE;
     return OK;
 }
 
-enum errors registration_or_authorization(FILE * output_file, User * user_data, int* count_users, int * capacity_user_data, int * index_user)
+enum errors registration_or_authorization(FILE * output_file, User * user_data, int* count_users, int * capacity_user_data, int * index_user, int * flag_empty_file)
 {
-    printf("Добро пожаловать!\nСписок доступных команд:\n1 - авторизация\n2 - регистрация\nВведите нужное действие: ");
     int flag;
-    //нужна проверка
-    scanf("%d", &flag);
-    char * buffer = (char *)malloc(11 * sizeof(char));
-    if(buffer == 0)
+    if(*flag_empty_file == EMPTY_FILE)
     {
-        printf("puppu\n");
+        printf("Добро пожаловать!\nСписок доступных команд:\n2 - регистрация\nВведите нужное действие: ");
+        scanf("%d", &flag);
+        if(flag != 2)
+        {
+            printf("нет такой команды\n");
+            return INVALID_INPUT;
+        }
+    }
+    else
+    {
+        printf("Добро пожаловать!\nСписок доступных команд:\n1 - авторизация\n2 - регистрация\nВведите нужное действие: ");
+        scanf("%d", &flag);
+    }
+    char * buffer = (char *)malloc(11 * sizeof(char));
+    if(buffer == NULL)
+    {
         return INVALID_MEMORY;
     }
     int len_buff = 0;
@@ -40,140 +51,149 @@ enum errors registration_or_authorization(FILE * output_file, User * user_data, 
 
     switch (flag)
     {
-    case 1:
-        printf("Введите имя пользователя: ");
+        case 1:
+            printf("Введите имя пользователя: ");
 
-        scanf("%10s", buffer);
-        while(buffer[len_buff] != '\0')
-        {
-            char c = buffer[len_buff];
-            if(isdigit(c) || isalpha(c))
+            scanf("%10s", buffer);
+            while(buffer[len_buff] != '\0')
             {
-                len_buff++;
+                char c = buffer[len_buff];
+                if(isdigit(c) || isalpha(c))
+                {
+                    len_buff++;
+                }
+                else
+                {
+                    printf("Некорректный символ: %c\n", c);
+                    free(buffer);
+                    return INVALID_INPUT;
+                }
+                if(len_buff == 6)
+                {
+                    printf("Длинное имя пользователя\n");
+                    free(buffer);
+                    return INVALID_INPUT;
+                }
             }
-            else
+            for(int i = 0; i < *count_users; ++i)
             {
-                printf("Некорректный символ: %c\n", c);
+                if(!strcmp(user_data[i].login, buffer))
+                {
+                    (*index_user) = i;
+                    break;
+                }
+            }
+            if((*index_user) == -1)
+            {
+                printf("Такого пользователя нет\n");
                 free(buffer);
                 return INVALID_INPUT;
             }
-            if(len_buff == 6)
+
+            printf("Введите пароль: ");
+
+            scanf("%d", &password);
+            if(password < 0 || password > 100000)
             {
-                printf("Длинное имя пользователя\n");
+                printf("Некорректный пароль\n");
                 free(buffer);
                 return INVALID_INPUT;
             }
-        }
-        for(int i = 0; i < *count_users; ++i)
-        {
-            if(!strcmp(user_data[i].login, buffer))
+            if(user_data[(*index_user)].pin != password)
             {
-                (*index_user) = i;
-                break;
-            }
-        }
-        if((*index_user) == -1)
-        {
-            printf("Такого пользователя нет\n");
-            free(buffer);
-            return INVALID_INPUT;
-        }
-
-        printf("Введите пароль: ");
-
-        scanf("%d", &password);
-        if(password < 0 || password > 100000)
-        {
-            printf("Некорректный пароль\n");
-            free(buffer);
-            return INVALID_INPUT;
-        }
-        if(user_data[(*index_user)].pin != password)
-        {
-            printf("Неверный пароль\n");
-            free(buffer);
-            return INVALID_INPUT;
-        }
-        printf("Вы успешно авторизировались\n");
-        //можно вывести про количество ограничений
-        break;
-    case 2:
-        printf("Введите имя пользователя: ");
-
-        scanf("%10s", buffer);
-        while(buffer[len_buff] != '\0')
-        {
-            char c = buffer[len_buff];
-            if(isdigit(c) || isalpha(c))
-            {
-                len_buff++;
-            }
-            else
-            {
-                printf("Некорректный символ: %c\n", c);
+                printf("Неверный пароль\n");
                 free(buffer);
                 return INVALID_INPUT;
             }
-            if(len_buff == 6)
+            printf("Вы успешно авторизировались\n");
+            if(user_data[*index_user].limit_request != 0)
             {
-                printf("Длинное имя пользователя\n");
+                printf("Для этого пользователя присутствует лимит команд: %d\n", user_data[*index_user].limit_request);
+            }
+            break;
+        case 2:
+            printf("Введите имя пользователя: ");
+
+            scanf("%10s", buffer);
+            while(buffer[len_buff] != '\0')
+            {
+                char c = buffer[len_buff];
+                if(isdigit(c) || isalpha(c))
+                {
+                    len_buff++;
+                }
+                else
+                {
+                    printf("Некорректный символ: %c\n", c);
+                    free(buffer);
+                    return INVALID_INPUT;
+                }
+                if(len_buff == 6)
+                {
+                    printf("Длинное имя пользователя\n");
+                    free(buffer);
+                    return INVALID_INPUT;
+                }
+            }
+
+            if(*capacity_user_data == *count_users)
+            {
+                *capacity_user_data += 100;
+                User * for_realloc = realloc(user_data, *capacity_user_data * sizeof(User));
+                if(for_realloc == NULL)
+                {
+                    return INVALID_MEMORY;
+                }
+                user_data = for_realloc;
+            }
+
+            for(int i = 0; i < *count_users; ++i)
+            {
+                if(!strcmp(user_data[i].login, buffer))
+                {
+                    (*index_user) = i;
+                    break;
+                }
+            }
+            if((*index_user) != -1)
+            {
+                printf("Имя пользователя занято\n");
                 free(buffer);
                 return INVALID_INPUT;
             }
-        }
+            strcpy(user_data[*count_users].login, buffer);
+            fprintf(output_file, "%s\n", buffer);
 
-        if(*capacity_user_data == *count_users)
-        {
-            *capacity_user_data += 100;
-            User * for_realloc = realloc(user_data, *capacity_user_data * sizeof(User));
-            if(for_realloc == NULL)
+            printf("Введите пароль: ");
+
+            if (scanf("%d", &password) != 1)
             {
-                return INVALID_MEMORY;
+                printf("Некорректный пароль\n");
+                free(buffer);
+                return INVALID_INPUT;
             }
-            user_data = for_realloc;
-        }
-
-        for(int i = 0; i < *count_users; ++i)
-        {
-            if(!strcmp(user_data[i].login, buffer))
+            if(password < 0 || password > 100000)
             {
-                (*index_user) = i;
-                break;
+                printf("Некорректный пароль\n");
+                free(buffer);
+                return INVALID_INPUT;
             }
-        }
-        if((*index_user) != -1)
-        {
-            printf("Имя пользователя занято\n");
-            free(buffer);
+            user_data[*count_users].pin = password;
+            fprintf(output_file,"%d\n", password);
+
+            user_data[*count_users].limit_request = 0;
+            fprintf(output_file,"%d\n", 0);
+
+            *index_user = *count_users;
+            (*count_users)++;
+
+            printf("Вы успешно зарегестрированы\n");
+            break;
+        default:
+            printf("нет такой команды\n");
             return INVALID_INPUT;
-        }
-        strcpy(user_data[*count_users].login, buffer);
-        fprintf(output_file, "%s\n", buffer);
-
-        printf("Введите пароль: ");
-
-        scanf("%d", &password);
-        if(password < 0 || password > 100000)
-        {
-            printf("Некорректный пароль\n");
-            free(buffer);
-            return INVALID_INPUT;
-        }
-        user_data[*count_users].pin = password;
-        fprintf(output_file,"%d\n", password);
-
-        user_data[*count_users].limit_request = 0;
-        fprintf(output_file,"%d\n", 0);
-
-        *index_user = *count_users;
-        (*count_users)++;
-
-        printf("Вы успешно зарегестрированы\n");
-        break;
-    default:
-        printf("нет такой команды\n");
-        return INVALID_INPUT;
     }
+    *flag_empty_file = OK;
     free(buffer);
     return OK;
 }
@@ -192,4 +212,14 @@ void command()
            "в одном сеансе выполнить более <number> запросов. Для подтверждения\n"
            "ограничений после ввода команды необходимо ввести значение 12345.\n"
            "6) Exit - выход из интрепретатора командной строки\n");
+}
+
+void writing_users_in_file(FILE * input_file, User * user_data, int* count_users)
+{
+    for(int i = 0; i < *count_users; ++i)
+    {
+        fprintf(input_file,"%s\n", user_data[i].login);
+        fprintf(input_file,"%d\n", user_data[i].pin);
+        fprintf(input_file, "%d\n", user_data[i].limit_request);
+    }
 }
