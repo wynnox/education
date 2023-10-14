@@ -51,6 +51,7 @@ int main(int argc, char* argv[])
         {
             printf("произошла ошибка при вычислении\n");
             if(input != NULL) fclose(input);
+            free(group);
             return ERROR_READ_FILE;
         }
         printf("xor8 = ");
@@ -59,6 +60,7 @@ int main(int argc, char* argv[])
             printf("%u ", group[i]);
         }
         printf("\n");
+        free(group);
     }
     else if (strcmp(argv[2], "mask") == 0)
     {
@@ -68,21 +70,21 @@ int main(int argc, char* argv[])
             if(input != NULL) fclose(input);
             return INVALID_INPUT;
         }
-//        unsigned int mask;
-//        if(convert_str_to_int(argv[3], &mask, 16) != OK)
-//        {
-//            printf("некорректная маска\n");
-//            if(input != NULL) fclose(input);
-//            return INVALID_INPUT;
-//        }
-//        int count_result;
-//        if(count_xor_mask_file(input, &mask, &count_result) != OK)
-//        {
-//            printf("произошла ошибка при вычислении\n");
-//            if(input != NULL) fclose(input);
-//            return ERROR_READ_FILE;
-//        }
-//        printf("количество чисел в файле, которые соответствуют маске %s(%u): %u\n", argv[3], mask,  count_result);
+        unsigned int mask;
+        if(convert_str_to_int(argv[3], &mask, 16) != OK)
+        {
+            printf("некорректная маска\n");
+            if(input != NULL) fclose(input);
+            return INVALID_INPUT;
+        }
+        int count_result;
+        if(count_xor_mask_file(input, &mask, &count_result) != OK)
+        {
+            printf("произошла ошибка при вычислении\n");
+            if(input != NULL) fclose(input);
+            return ERROR_READ_FILE;
+        }
+        printf("количество групп в файле, которые соответствуют маске %s: %u\n", argv[3],  count_result);
     }
     else
     {

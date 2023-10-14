@@ -45,6 +45,10 @@ enum errors xor32_file(FILE* input, unsigned char ** group, size_t size_group)
     {
         return INVALID_MEMORY;
     }
+    for(size_t i = 0; i < size_buffer; ++i)
+    {
+        buffer[i] = 0;
+    }
     int count_read;
     while( (count_read = fread(buffer, sizeof(unsigned char), size_buffer, input)) > 0)
     {
@@ -83,8 +87,7 @@ enum errors count_xor_mask_file(FILE* input, unsigned int * mask, int * count_re
     {
         group[i] = 0;
     }
-
-    int count_read;
+    int count_read, flag = 1;
     while( (count_read = fread(group, sizeof(unsigned char), size_group, input)) > 0)
     {
         if(count_read != 4)
@@ -94,16 +97,15 @@ enum errors count_xor_mask_file(FILE* input, unsigned int * mask, int * count_re
                 group[i] = 0x00;
             }
         }
-        if( *(unsigned int*)group == *mask)
+        for(size_t i = 0; i < size_group; ++i)
         {
-            (*count_result)++;
+            if((group[i] & *mask) != *mask)
+            {
+                flag = 0;
+                break;
+            }
         }
-        printf("mask: ");
-        for (size_t i = 0; i < size_group; ++i)
-        {
-            printf("%u ", group[i]);
-        }
-        printf("\ngroup: %u\n", *(unsigned int*)group);
+        if(flag) (*count_result)++;
     }
     if(ferror(input))
     {
