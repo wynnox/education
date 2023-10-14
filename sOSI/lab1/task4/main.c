@@ -40,14 +40,25 @@ int main(int argc, char* argv[])
             if(input != NULL) fclose(input);
             return INVALID_INPUT;
         }
-        unsigned int result_xor32;
-        if (xor8_file(input, &result_xor32) != OK)
+        size_t size_group = 4;
+        unsigned char* group = (unsigned char *)malloc(sizeof(unsigned char) * size_group);
+        if(group == NULL)
+        {
+            if(input != NULL) fclose(input);
+            return INVALID_MEMORY;
+        }
+        if (xor32_file(input, &group, size_group) != OK)
         {
             printf("произошла ошибка при вычислении\n");
             if(input != NULL) fclose(input);
             return ERROR_READ_FILE;
         }
-        printf("xor8 = %d", result_xor32);
+        printf("xor8 = ");
+        for(size_t i = 0; i < size_group; ++i)
+        {
+            printf("%u ", group[i]);
+        }
+        printf("\n");
     }
     else if (strcmp(argv[2], "mask") == 0)
     {
@@ -57,21 +68,21 @@ int main(int argc, char* argv[])
             if(input != NULL) fclose(input);
             return INVALID_INPUT;
         }
-        unsigned int mask;
-        if(convert_str_to_int(argv[3], &mask, 16) != OK)
-        {
-            printf("некорректная маска\n");
-            if(input != NULL) fclose(input);
-            return INVALID_INPUT;
-        }
-        int count_result;
-        if(count_xor_mask_file(input, &mask, &count_result) != OK)
-        {
-            printf("произошла ошибка при вычислении\n");
-            if(input != NULL) fclose(input);
-            return ERROR_READ_FILE;
-        }
-        printf("количество чисел в файле, которые соответствуют маске %s(%u): %u\n", argv[3], mask,  count_result);
+//        unsigned int mask;
+//        if(convert_str_to_int(argv[3], &mask, 16) != OK)
+//        {
+//            printf("некорректная маска\n");
+//            if(input != NULL) fclose(input);
+//            return INVALID_INPUT;
+//        }
+//        int count_result;
+//        if(count_xor_mask_file(input, &mask, &count_result) != OK)
+//        {
+//            printf("произошла ошибка при вычислении\n");
+//            if(input != NULL) fclose(input);
+//            return ERROR_READ_FILE;
+//        }
+//        printf("количество чисел в файле, которые соответствуют маске %s(%u): %u\n", argv[3], mask,  count_result);
     }
     else
     {

@@ -33,37 +33,39 @@ enum errors xor8_file(FILE* input, unsigned int * result)
     return OK;
 }
 
-enum errors xor32_file(FILE* input, unsigned int * result)
+enum errors xor32_file(FILE* input, unsigned char ** group, size_t size_group)
 {
-    *result = 0;
-    size_t size_group = 4;
-    unsigned char* group = (unsigned char *)malloc(sizeof(unsigned char) * size_group);
-    if(group == NULL)
+    for(size_t i = 0; i < size_group; ++i)
+    {
+        (*group)[i] = 0;
+    }
+    size_t size_buffer = size_group;
+    unsigned char* buffer = (unsigned char *)malloc(sizeof(unsigned char) * size_buffer);
+    if(buffer == NULL)
     {
         return INVALID_MEMORY;
     }
-    for(size_t i = 0; i < size_group; ++i)
-    {
-        group[i] = 0;
-    }
     int count_read;
-    while( (count_read = fread(group, sizeof(unsigned char), size_group, input)) > 0)
+    while( (count_read = fread(buffer, sizeof(unsigned char), size_buffer, input)) > 0)
     {
         if(count_read != 4)
         {
             for (size_t i = count_read; i < 4; i++)
             {
-                group[i] = 0x00;
+                buffer[i] = 0x00;
             }
         }
-        *result ^= *(unsigned int*)group;
+        for(size_t i = 0; i < size_group; ++i)
+        {
+            (*group)[i] ^= buffer[i];
+        }
     }
     if(ferror(input))
     {
         free(group);
         return ERROR_READ_FILE;
     }
-    free(group);
+    free(buffer);
     return OK;
 }
 
