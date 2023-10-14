@@ -42,18 +42,6 @@ int main(int argc, char* argv[])
         return 2;
     }
 
-//    char c = fgetc(input);
-//    while (!feof(input))
-//    {
-//        if(fputc(c, output) == EOF)
-//        {
-//            printf("произошла ошибка при записи байта\n");
-//            if(input != NULL) fclose(input);
-//            if(output != NULL) fclose(output);
-//            return 1;
-//        }
-//        c = fgetc(input);
-//    }
     printf("файл %s скопирован в файл %s\n", argv[1], argv[2]);
     if(input != NULL) fclose(input);
     if(output != NULL) fclose(output);
