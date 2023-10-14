@@ -20,7 +20,7 @@ int main(int argc, char* argv[])
         if(argc != 3)
         {
             printf("невалидное число аргументов\n");
-            if(input != NULL) fclose(input);
+            fclose(input);
             return INVALID_INPUT;
         }
         unsigned int result_xor8;
@@ -37,14 +37,14 @@ int main(int argc, char* argv[])
         if(argc != 3)
         {
             printf("невалидное число аргументов\n");
-            if(input != NULL) fclose(input);
+            fclose(input);
             return INVALID_INPUT;
         }
         size_t size_group = 4;
         unsigned char* group = (unsigned char *)malloc(sizeof(unsigned char) * size_group);
         if(group == NULL)
         {
-            if(input != NULL) fclose(input);
+            fclose(input);
             return INVALID_MEMORY;
         }
         if (xor32_file(input, &group, size_group) != OK)
@@ -67,14 +67,14 @@ int main(int argc, char* argv[])
         if(argc != 4)
         {
             printf("невалидное число аргументов\n");
-            if(input != NULL) fclose(input);
+            fclose(input);
             return INVALID_INPUT;
         }
         unsigned int mask;
         if(convert_str_to_int(argv[3], &mask, 16) != OK)
         {
             printf("некорректная маска\n");
-            if(input != NULL) fclose(input);
+            fclose(input);
             return INVALID_INPUT;
         }
         int count_result;
