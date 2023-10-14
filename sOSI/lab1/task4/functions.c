@@ -1,20 +1,20 @@
 #include "file_processing.h"
 
-enum errors convert_str_to_int (const char *str, unsigned int * result, int base)
+enum errors check_mask_validation(char** mask)
 {
-    char *endptr;
-    errno = 0;
-    *result = strtol(str, &endptr, base);
-
-    if (errno == ERANGE && *result == UINT_MAX)
+    size_t len = strlen(*mask);
+    if(len != 4)
     {
         return INVALID_INPUT;
-    } else if (errno != 0 && *result == 0) {
-        return INVALID_INPUT;
-    } else if (*endptr != '\0') {
+    }
+    if((*mask)[0] == '-')
+    {
         return INVALID_INPUT;
     }
-
+    for(size_t i = 0; i < len; ++i)
+    {
+        if(!isxdigit((*mask)[i])) return INVALID_INPUT;
+    }
     return OK;
 }
 
@@ -73,7 +73,7 @@ enum errors xor32_file(FILE* input, unsigned char ** group, size_t size_group)
     return OK;
 }
 
-enum errors count_xor_mask_file(FILE* input, unsigned int * mask, int * count_result)
+enum errors count_xor_mask_file(FILE* input, char ** mask, int * count_result)
 {
     *count_result = 0;
 
@@ -99,7 +99,7 @@ enum errors count_xor_mask_file(FILE* input, unsigned int * mask, int * count_re
         }
         for(size_t i = 0; i < size_group; ++i)
         {
-            if((group[i] & *mask) != *mask)
+            if((group[i] & (*mask)[i]) != (*mask)[i])
             {
                 flag = 0;
                 break;

@@ -70,15 +70,14 @@ int main(int argc, char* argv[])
             fclose(input);
             return INVALID_INPUT;
         }
-        unsigned int mask;
-        if(convert_str_to_int(argv[3], &mask, 16) != OK)
+        if(check_mask_validation(&argv[3]) != OK)
         {
-            printf("некорректная маска\n");
+            printf("невалидная маска\n");
             fclose(input);
             return INVALID_INPUT;
         }
         int count_result;
-        if(count_xor_mask_file(input, &mask, &count_result) != OK)
+        if(count_xor_mask_file(input, &argv[3], &count_result) != OK)
         {
             printf("произошла ошибка при вычислении\n");
             if(input != NULL) fclose(input);
@@ -89,7 +88,7 @@ int main(int argc, char* argv[])
     else
     {
         printf("такого флага нет в доступных флагах\n");
-        if(input != NULL) fclose(input);
+        fclose(input);
         return INVALID_INPUT;
     }
 
