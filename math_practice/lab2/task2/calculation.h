@@ -9,7 +9,8 @@
 enum errors
 {
     OK,
-    OVERFLOW_ERROR
+    OVERFLOW_ERROR,
+    INVALID_INPUT
 };
 
 enum errors fast_pow(double base, int exponent, double *result);

@@ -12,6 +12,10 @@ int check_overflow(double * number)
 enum errors fast_pow(double base, int exponent, double *result)
 {
     enum errors status;
+    if(exponent < 0)
+    {
+        return INVALID_INPUT;
+    }
     if(exponent == 0)
     {
         *result = 1.0;
