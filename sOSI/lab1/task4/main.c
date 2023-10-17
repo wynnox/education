@@ -22,12 +22,6 @@ int main(int argc, char* argv[])
             fclose(input);
             return INVALID_INPUT;
         }
-        if(feof(input) == 0)
-        {
-            printf("пустой файл\n");
-            fclose(input);
-            return ERROR_READ_FILE;
-        }
         unsigned int result_xor8;
         if (xor8_file(input, &result_xor8) != OK)
         {
@@ -44,12 +38,6 @@ int main(int argc, char* argv[])
             printf("невалидное число аргументов\n");
             fclose(input);
             return INVALID_INPUT;
-        }
-        if(feof(input) == 0)
-        {
-            printf("пустой файл\n");
-            fclose(input);
-            return ERROR_READ_FILE;
         }
         size_t size_group = 4;
         unsigned char* group = (unsigned char *)malloc(sizeof(unsigned char) * size_group);
@@ -81,20 +69,16 @@ int main(int argc, char* argv[])
             fclose(input);
             return INVALID_INPUT;
         }
-        if(feof(input) == 0)
-        {
-            printf("пустой файл\n");
-            fclose(input);
-            return ERROR_READ_FILE;
-        }
-        if(check_mask_validation(&argv[3]) != OK)
+        unsigned int mask;
+        if(convert_str_to_int(argv[3],&mask, 16) != OK)
         {
             printf("невалидная маска\n");
             fclose(input);
             return INVALID_INPUT;
         }
         int count_result;
-        if(count_xor_mask_file(input, &argv[3], &count_result) != OK)
+        unsigned int number = 0;
+        if(count_xor_mask_file(input, mask, number, &count_result) != OK)
         {
             printf("произошла ошибка при вычислении\n");
             if(input != NULL) fclose(input);

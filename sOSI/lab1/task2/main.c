@@ -184,6 +184,11 @@ int main(int argc, char* argv[])
                 printf("%s@nncl:~$ неверный формат лимита\n", user_data[index_user].login);
                 continue;
             }
+            if(new_limit <= 0)
+            {
+                printf("%s@nncl:~$ неверный формат лимита\n", user_data[index_user].login);
+                continue;
+            }
 
             printf("%s@nncl:~$ введите пароль: ", user_data[index_user].login);
             int password = 12345;

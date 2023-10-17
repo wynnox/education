@@ -1,20 +1,20 @@
 #include "file_processing.h"
 
-enum errors check_mask_validation(char** mask)
+enum errors convert_str_to_int (const char *str, unsigned int * result, int base)
 {
-    size_t len = strlen(*mask);
-    if(len != 4)
+    char *endptr;
+    errno = 0;
+    *result = strtol(str, &endptr, base);
+
+    if (errno == ERANGE && *result == UINT_MAX)
     {
         return INVALID_INPUT;
-    }
-    if((*mask)[0] == '-')
-    {
+    } else if (errno != 0 && *result == 0) {
+        return INVALID_INPUT;
+    } else if (*endptr != '\0') {
         return INVALID_INPUT;
     }
-    for(size_t i = 0; i < len; ++i)
-    {
-        if(!isxdigit((*mask)[i])) return INVALID_INPUT;
-    }
+
     return OK;
 }
 
@@ -26,10 +26,10 @@ enum errors xor8_file(FILE* input, unsigned int * result)
     {
         *result ^= c;
     }
-    if(ferror(input))
-    {
-        return ERROR_READ_FILE;
-    }
+//    if(ferror(input))
+//    {
+//        return ERROR_READ_FILE;
+//    }
     return OK;
 }
 
@@ -49,16 +49,8 @@ enum errors xor32_file(FILE* input, unsigned char ** group, size_t size_group)
     {
         buffer[i] = 0;
     }
-    int count_read;
-    while( (count_read = fread(buffer, sizeof(unsigned char), size_buffer, input)) > 0)
+    while( fread(buffer, sizeof(unsigned char), size_buffer, input) > 0)
     {
-        if(count_read != 4)
-        {
-            for (size_t i = count_read; i < 4; i++)
-            {
-                buffer[i] = 0x00;
-            }
-        }
         for(size_t i = 0; i < size_group; ++i)
         {
             (*group)[i] ^= buffer[i];
@@ -73,45 +65,20 @@ enum errors xor32_file(FILE* input, unsigned char ** group, size_t size_group)
     return OK;
 }
 
-enum errors count_xor_mask_file(FILE* input, char ** mask, int * count_result)
+enum errors count_xor_mask_file(FILE* input, unsigned int mask, unsigned int number, int * count_result)
 {
     *count_result = 0;
-
-    size_t size_group = 4;
-    unsigned char* group = (unsigned char *)malloc(sizeof(unsigned char) * size_group);
-    if(group == NULL)
+    number = 0;
+    while(fread(&number, sizeof(unsigned int), 1, input) > 0)
     {
-        return INVALID_MEMORY;
-    }
-    for(size_t i = 0; i < size_group; ++i)
-    {
-        group[i] = 0;
-    }
-    int count_read, flag = 1;
-    while( (count_read = fread(group, sizeof(unsigned char), size_group, input)) > 0)
-    {
-        if(count_read != 4)
+        if((number & mask) > 0)
         {
-            for (size_t i = count_read; i < 4; i++)
-            {
-                group[i] = 0x00;
-            }
+            (*count_result)++;
         }
-        for(size_t i = 0; i < size_group; ++i)
-        {
-            if((group[i] & (*mask)[i]) != (*mask)[i])
-            {
-                flag = 0;
-                break;
-            }
-        }
-        if(flag) (*count_result)++;
     }
     if(ferror(input))
     {
-        free(group);
         return ERROR_READ_FILE;
     }
-    free(group);
     return OK;
 }
