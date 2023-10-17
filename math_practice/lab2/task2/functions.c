@@ -14,7 +14,8 @@ enum errors fast_pow(double base, int exponent, double *result)
     enum errors status;
     if(exponent < 0)
     {
-        return INVALID_INPUT;
+        status = fast_pow(1. / base,  -1 * exponent, result);
+        return status;
     }
     if(exponent == 0)
     {
@@ -42,3 +43,25 @@ enum errors fast_pow(double base, int exponent, double *result)
     return status;
 }
 
+enum errors geometric_mean(double* result, int count, ...)
+{
+    if(count <= 0)
+    {
+        return INVALID_INPUT;
+    }
+    *result = 1;
+    va_list args;
+    va_start(args, count);
+    for(int i = 0; i < count; ++i)
+    {
+        *result *= va_arg(args, double);
+        if(check_overflow(result))
+        {
+            va_end(args);
+            return OVERFLOW_ERROR;
+        }
+    }
+    *result = pow(*result, 1. / count);
+    va_end(args);
+    return OK;
+}

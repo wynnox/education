@@ -14,6 +14,7 @@ enum errors
 };
 
 enum errors fast_pow(double base, int exponent, double *result);
+enum errors geometric_mean(double* result, int count, ...);
 int check_overflow(double * number);
 
 #endif
