@@ -24,7 +24,7 @@ int main()
     int exponent = -2;
     enum errors status_pow = fast_pow(base_pow, exponent, &result_pow);
     if(status_pow == OK)
-    {        printf("overflow occurred\n");
+    {
 
         printf("%lf^%d = %lf\n", base_pow, exponent, result_pow);
     }
