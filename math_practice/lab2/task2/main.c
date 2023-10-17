@@ -25,7 +25,6 @@ int main()
     enum errors status_pow = fast_pow(base_pow, exponent, &result_pow);
     if(status_pow == OK)
     {
-
         printf("%lf^%d = %lf\n", base_pow, exponent, result_pow);
     }
     else
