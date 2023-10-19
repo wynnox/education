@@ -1,8 +1,5 @@
 #include "sum_in_base.h"
-/*
- * 3) сложение
- * 4) обратный реверс результата
- */
+
 
 enum errors sum_in_base(char ** result, int base, int count_number, ...)
 {
