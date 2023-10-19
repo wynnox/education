@@ -91,7 +91,7 @@ int check_valid(int base, char ** number)
 void reverse(char ** number, int len)
 {
     int i = 0, j = len - 1;
-    for(; (j - i) != 0 && (j - i) != 1; ++i, --j)
+    for(; (j - i) > 0; ++i, --j)
     {
         char temp = (*number)[i];
         (*number)[i] = (*number)[j];

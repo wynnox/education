@@ -227,5 +227,17 @@ int main()
     }
     free(result);
 
+
+    //test 20
+    printf("\n\ttest 20\n1 + 2 + 3 + 4 + 5 + 6 (notation 10)\nexpected result: 21\n");
+    err = sum_in_base(&result, 10, 6, "1", "2", "3", "4", "5", "6");
+    if(err == OK)
+    {
+        printf("\t\t result: %s\n", result);
+    } else {
+        printf("error\n");
+    }
+    free(result);
+
     return 0;
 }
