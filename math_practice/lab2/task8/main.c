@@ -173,7 +173,7 @@ int main()
     free(result);
 
     //test 15
-    printf("\n\ttest 15\nABCDEF + FEDCBA (notation 16)\nexpected result: 1C9C38\n");
+    printf("\n\ttest 15\nABCDEF + FEDCBA (notation 16)\nexpected result: 1AAAAA9\n");
     err = sum_in_base(&result, 16, 2, "ABCDEF", "FEDCBA");
     if(err == OK)
     {
@@ -184,7 +184,7 @@ int main()
     free(result);
 
     //test 16
-    printf("\n\ttest 16\nA + B + C + D (notation 16)\nexpected result: 2A\n");
+    printf("\n\ttest 16\nA + B + C + D (notation 16)\nexpected result: 2E\n");
     err = sum_in_base(&result, 16, 4, "A", "B", "C", "D");
     if(err == OK)
     {
@@ -195,8 +195,8 @@ int main()
     free(result);
 
     //test 17
-    printf("\n\ttest 17\nZ + A (notation 26)\nexpected result: 11\n");
-    err = sum_in_base(&result, 26, 2, "Z", "A");
+    printf("\n\ttest 17\nZ + A (notation 36)\nexpected result: 19\n");
+    err = sum_in_base(&result, 36, 2, "Z", "A");
     if(err == OK)
     {
         printf("\t\t result: %s\n", result);
@@ -206,7 +206,7 @@ int main()
     free(result);
 
     //test 18
-    printf("\n\ttest 18\nV + 1 (notation 32)\nexpected result: 12\n");
+    printf("\n\ttest 18\nV + 1 (notation 32)\nexpected result: 10\n");
     err = sum_in_base(&result, 32, 2, "V", "1");
     if(err == OK)
     {
@@ -217,8 +217,8 @@ int main()
     free(result);
 
     //test 19
-    printf("\n\ttest 19\nZ + Y + X + W (notation 26)\nexpected result: 3S\n");
-    err = sum_in_base(&result, 26, 4, "Z", "Y", "X", "W");
+    printf("\n\ttest 19\nZ + Y + X + W (notation 36)\nexpected result: 3Q\n");
+    err = sum_in_base(&result, 36, 4, "Z", "Y", "X", "W");
     if(err == OK)
     {
         printf("\t\t result: %s\n", result);
