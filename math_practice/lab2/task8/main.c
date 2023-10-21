@@ -55,7 +55,7 @@ int main()
     {
         printf("error\n");
     }
-    if(result != NULL) free(result);
+
 
     //тест 5
     printf("\n\ttest 5\n0 + 23456789 (notation 10)\nexpected result: 23456789\n");
@@ -107,7 +107,7 @@ int main()
     {
         printf("error\n");
     }
-    if(result != NULL) free(result);
+
 
     //тест 9
     printf("\n\ttest 9\n'' + '' (notation 10)\nexpected result: error\n");
@@ -118,7 +118,6 @@ int main()
     } else {
         printf("error\n");
     }
-    free(result);
 
     //тест 10
     printf("\n\ttest 10\n99999999999999999999 + 99999999999999999999 (notation 10)\nexpected result: 199999999999999999998\n");
@@ -151,7 +150,6 @@ int main()
     } else {
         printf("error\n");
     }
-    free(result);
 
     //тест 13
     printf("\n\ttest 13\n000123 + 00456 (notation 10)\nexpected result: 579\n");
@@ -253,14 +251,24 @@ int main()
     }
     free(result);
 
-//    printf("\n\ttest 23\n");
-//    err = sum_in_base(&result, 10, 2, "99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999", "1");
-//    if(err == OK)
-//    {
-//        printf("\t\t result: %s\n", result);
-//    } else {
-//        printf("error\n");
-//    }
-//    free(result);
+    printf("\n\ttest 23\n");
+    err = sum_in_base(&result, 10, 2, "99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999", "1");
+    if(err == OK)
+    {
+        printf("result: %s\n", result);
+    } else {
+        printf("error\n");
+    }
+    free(result);
+
+    printf("\n\ttest 24\n");
+    err = sum_in_base(&result, 10, 2, "1", "99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999");
+    if(err == OK)
+    {
+        printf("result: %s\n", result);
+    } else {
+        printf("error\n");
+    }
+    free(result);
     return 0;
 }

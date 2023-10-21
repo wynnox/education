@@ -32,7 +32,6 @@ enum errors sum_in_base(char ** result, int base, int count_number, ...)
         return INVALID_MEMORY;
     }
     strcpy(*result, number);
-
     free(number);
 
     for (int i = 0; i < count_number - 1; ++i)
@@ -52,15 +51,16 @@ enum errors sum_in_base(char ** result, int base, int count_number, ...)
         {
             int max = len_res > len_num ? len_res : len_num;
             capacity_res = max * 2;
-            char ** for_realloc = (char **)realloc((*result), capacity_res * sizeof(char));
+            char * for_realloc = (char *)realloc((*result), capacity_res * sizeof(char));
             if(for_realloc == NULL)
             {
                 va_end(args);
                 free(number);
                 return INVALID_MEMORY;
             }
-            result = for_realloc;
+            (*result) = for_realloc;
         }
+
         sum_of_numbers(result, number, base, &len_res, len_num);
         free(number);
     }
