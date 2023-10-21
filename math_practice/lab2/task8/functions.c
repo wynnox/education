@@ -8,19 +8,38 @@ enum errors sum_in_base(char ** result, int base, int count_number, ...)
         return INVALID_INPUT;
     }
 
-    int capacity_res = LEN, len_res = 0;
+    va_list args;
+    va_start(args, count_number);
+
+    char * number_arg = va_arg(args, char*);
+    char * number = strdup(number_arg);
+    int len_num = strlen(number);
+    if(check_valid(base, &number))
+    {
+        printf("number %s is incorrect\n", number);
+        va_end(args);
+        free(number);
+        return INVALID_INPUT;
+    }
+    reverse(&number, len_num);
+
+    int capacity_res = len_num * 2, len_res = len_num;
     (*result) = (char *)calloc(sizeof(char), capacity_res);
     if((*result) == NULL)
     {
+        va_end(args);
+        free(number);
         return INVALID_MEMORY;
     }
+    strcpy(*result, number);
 
-    va_list args;
-    va_start(args, count_number);
-    for (int i = 0; i < count_number; ++i)
+    free(number);
+
+    for (int i = 0; i < count_number - 1; ++i)
     {
-        char * number_arg = va_arg(args, char*);
-        char * number = strdup(number_arg);
+        number_arg = va_arg(args, char*);
+        number = strdup(number_arg);
+        len_num = strlen(number);
         if(check_valid(base, &number))
         {
             printf("number %s is incorrect\n", number);
@@ -28,12 +47,12 @@ enum errors sum_in_base(char ** result, int base, int count_number, ...)
             free(number);
             return INVALID_INPUT;
         }
-        int len_num = strlen(number);
         reverse(&number, len_num);
         if(len_num + 1 > capacity_res || len_res + 1 > capacity_res)
         {
-            capacity_res *= 2;
-            char ** for_realloc = (char **)realloc((*result), capacity_res);
+            int max = len_res > len_num ? len_res : len_num;
+            capacity_res = max * 2;
+            char ** for_realloc = (char **)realloc((*result), capacity_res * sizeof(char));
             if(for_realloc == NULL)
             {
                 va_end(args);
