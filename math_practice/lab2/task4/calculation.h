@@ -20,6 +20,7 @@ typedef struct {
 } Point;
 
 enum errors calculate_polynomial(double * result, double x, int n, ...);
-
+bool is_convex(int count, ...);
+double crossProduct(Point first, Point second);
 
 #endif

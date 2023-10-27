@@ -6,23 +6,40 @@
  *  отрицательные. Если это условие не выполняется, многоугольник
  *  не является выпуклым.
  */
-//bool is_convex(int count, ...)
-//{
-//    va_list args;
-//    va_start(args, count);
-//
-//    double z;
-//    double dx1, dy1, dx2, dy2;
-//    int prev_sign = 0, curr_sign;
-//    for(int i = 0; i < count; ++i)
-//    {
-//        Point points = va_arg(args, Point);
-//
-//    }
-//
-//    va_end(args);
-//    return true;
-//}
+
+double crossProduct(Point first, Point second)
+{
+    return first.x * second.y - first.y * second.x;
+}
+
+bool is_convex(int count, ...)
+{
+    va_list args;
+    va_start(args, count);
+
+    int prev_sign = 0, curr_sign;
+    Point first = va_arg(args, Point);
+    Point second = va_arg(args, Point);
+    prev_sign = crossProduct(first, second) > 0 ? 1 : 0;
+    for(int i = 0; i < count - 2; ++i)
+    {
+        Point points = va_arg(args, Point);
+        curr_sign = crossProduct(points, second) > 0 ? 1 : 0;
+        if (curr_sign != 0 && curr_sign != prev_sign)
+        {
+            return false;
+        }
+        second = points;
+    }
+
+    curr_sign = crossProduct(second, first);
+    if (curr_sign != 0 && curr_sign != prev_sign)
+    {
+        return false;
+    }
+    va_end(args);
+    return true;
+}
 
 enum errors calculate_polynomial(double * result, double x, int n, ...)
 {
