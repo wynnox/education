@@ -3,7 +3,8 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/wait.h>
-#include <sys/mman.h>
+#include <sys/shm.h>
+//#include <sys/mman.h>
 
 enum errors
 {
@@ -92,7 +93,16 @@ int main(int argc, char** argv)
 
     int bufsize = 0;
     char *filename = NULL;
-    int *found = mmap(NULL, sizeof(int), PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    int shmid;
+    if((shmid = shmget(IPC_PRIVATE, sizeof(int), 0666 | IPC_PRIVATE)) == -1)
+    {
+        return INVALID_MEMORY;
+    }
+    int *found = (int *)shmat(shmid, NULL, 0);
+    if(*found == -1)
+    {
+        return INVALID_MEMORY;
+    }
     *found = 0;
     while(!feof(file_list))
     {
@@ -135,7 +145,9 @@ int main(int argc, char** argv)
 
     fclose(file_list);
     free(filename);
-    munmap(found, sizeof(int));
-
+    if(shmdt(found) == -1)
+    {
+        return INVALID_MEMORY;
+    }
     return 0;
 }
