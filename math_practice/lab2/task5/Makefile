@@ -1,5 +1,5 @@
 CC = gcc
-STD_FLAGS = -Wall -Werror -Wextra -std=c11
+STD_FLAGS = -Wall -Werror -Wextra
 
 all: functions.o oversprintf.o main.o
 	$(CC) $(STD_FLAGS) $^ -o task_5.out

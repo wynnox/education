@@ -75,11 +75,35 @@ int oversprintf(char * str, const char * format, ...)
 //        {
 //            //
 //        }
-        //надо обработать случай когда нет после % % или спецификатора
         else if(format[i] == '%')
         {
-            continue;
-            //для одного % ничо не знаю, эт ошибка
+            char * symbols = "diouxXeEfFgGaAcspn%";
+            char * end_type = strpbrk(format + i, symbols);
+            int diff = end_type - format;
+            char * mini_format = (char*)malloc(sizeof(char) * (diff + 1));
+            //хуйня из под коня но оставим так
+            if(mini_format == NULL)
+            {
+                str[count] = '\0';
+                count = -2;
+                va_end(args);
+                return count;
+            }
+            memcpy(mini_format, format + i, diff);
+            mini_format[diff] = '\0';
+            int k = vsprintf(str + count, mini_format, args);
+            printf("%s %d\n", mini_format, k);
+            if (k == -1)
+            {
+                str[count] = '\0';
+                count = -1;
+                va_end(args);
+                free(mini_format);
+                return count;
+            }
+            i += (diff - 1);
+            count += k;
+            free(mini_format);
         }
         else
         {

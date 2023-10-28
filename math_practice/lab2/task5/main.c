@@ -25,6 +25,20 @@ int main()
     printf("format: 'over %%Roover' 100000000\n");
     printf("str: '%s' count:%d\n\n", buff, count);
 
+    printf("\t\tTest 5\n");
+    count = oversprintf(buff, "over %'.2f pupupu %Ro", 1234567.89, 5);
+    printf("format: 'over %%'.2f pupupu %%Ro' 1234567.89, 5\n");
+    printf("str: '%s' count:%d\n\n", buff, count);
+
+    printf("\t\tTest 6\n");
+    count = oversprintf(buff, "over %", 100000000);
+    printf("format: 'over %%' 100000000\n");
+    printf("str: '%s' count:%d\n\n", buff, count);
 
     return 0;
 }
+
+/*
+ * printf("%*d", width, num);
+ * printf("%2$*1$d", width, num);
+ */
