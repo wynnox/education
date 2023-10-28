@@ -105,6 +105,12 @@ enum errors find_substring_in_file(struct Sub ** subs, char * str, int * len_sub
             else
             {
                 idx = 0;
+                if(str[idx] == c)
+                {
+                    idx++;
+                    count_char_output = count_char;
+                    count_line_output = count_line;
+                }
             }
             if(idx == len_str)
             {

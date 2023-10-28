@@ -4,7 +4,7 @@ int main()
 {
     char file_1[] = "tests/1.txt";
     char file_2[] = "tests/2.txt";
-    char substr[] = "\n";
+    char substr[] = "hello";
     struct Sub * subs;
     int len = 0;
     if (find_substring_in_file(&subs, substr, &len, 2, file_1, file_2) != OK)
