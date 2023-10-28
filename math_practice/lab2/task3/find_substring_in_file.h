@@ -3,6 +3,7 @@
 
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 enum errors
 {
@@ -12,7 +13,17 @@ enum errors
     ERROR_OPEN_FILE
 };
 
-enum errors find_substring_in_file(char * str, int count_file, ...);
+struct Sub
+{
+    char * filename;
+    int line;
+    int idx;
+    int flag_open;
+    struct Sub * next;
+};
+
+enum errors add_sub(struct Sub ** head, char * filename, int line, int idx, int * len);
+enum errors find_substring_in_file(struct Sub ** subs, char * str, int * len_subs, int count_file, ...);
 int string_len(const char * str);
 
 #endif
