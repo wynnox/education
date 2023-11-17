@@ -64,6 +64,28 @@ Node * insert_node(Node * root, char * word)
     return root;
 }
 
+Node * search_node(Node * root, char * word)
+{
+    if (root == NULL)
+    {
+        return NULL;
+    }
+
+    if(strcmp(word, root->word) < 0)
+    {
+        root->left = search_node(root->left, word);
+    }
+    else if (strcmp(word, root->word) > 0)
+    {
+        root->right = search_node(root->right, word);
+    }
+    else
+    {
+        return root;
+    }
+
+}
+
 enum errors read_from_file(FILE * filename, Node ** root, const char * separator)
 {
     int len_buffer = 0, capacity_buffer = 20;
@@ -75,7 +97,8 @@ enum errors read_from_file(FILE * filename, Node ** root, const char * separator
     buffer[0] = '\0';
 
     char c;
-    char for_sep[2] = "\0\0";
+    // TODO: убрать костыль
+    char for_sep[2] = " ";
     while(!feof(filename))
     {
         c = fgetc(filename);
@@ -169,6 +192,18 @@ Node * delete_tree(Node* root) {
     return NULL;
 }
 
+void menu()
+{
+    printf("\n"
+           "0. call menu\n"
+           "1. Counting the number of occurrences of a word\n"
+           "2. Displaying the most frequently occurring words\n"
+           "3. Finding the longest and shortest word\n"
+           "4. Finding the depth of a given tree\n"
+           "5. Saving a tree to a file and restoring it\n"
+           "6. Exit\n"
+           );
+}
 
 int main(int argc, char * argv[])
 {
@@ -197,7 +232,7 @@ int main(int argc, char * argv[])
 
     for(int i = 2; i < argc; ++i)
     {
-        if(strlen(argv[i]) > 1)
+        if(strlen(argv[i]) != 1)
         {
             printf("separator must be one character: %s\n", argv[i]);
             fclose(filename);
@@ -219,6 +254,73 @@ int main(int argc, char * argv[])
     }
 
     inorder(root, 0);
+
+    menu();
+    printf("Select option: ");
+    int flag_stop = 0;
+    char choice;
+    while (!flag_stop)
+    {
+        if(scanf(" %c", &choice) == EOF)
+        {
+            break;
+        }
+
+        //TODO: какая же залупа, почитать ещё
+        while (getchar() != '\n');
+        switch (choice)
+        {
+            case '0':
+                menu();
+                break;
+            case '1':
+                // TODO: поменять на динамику со статики
+                char buff[21];
+                printf("Enter a search word (limit 20 characters): ");
+                scanf("%20s", buff);
+                //TODO: какая же залупа, почитать ещё
+                while (getchar() != '\n');
+
+                Node * search = search_node(root, buff);
+                if(search == NULL)
+                {
+                    printf("number of words '%s' found in the text: %d\n", buff, 0);
+                }
+                else
+                {
+                    printf("number of words '%s' found in the text: %d\n", search->word, search->count);
+                }
+                break;
+            case '2':
+
+                // TODO: вывод первых n наиболее часто встречающихся слов в файле (значение n вводится с консоли)
+
+                break;
+            case '3':
+
+                // TODO: Поиск и вывод в контексте вызывающего кода в консоль самого длинного и самого короткого слова (если таковых несколько,необходимо вывести в консоль любое из них)
+
+                break;
+            case '4':
+
+                // TODO: поиска глубины данного дерева
+
+                break;
+            case '5':
+
+                // TODO: кинуть дерево в файл а потом обратно воссоздать такое же
+
+                break;
+            case '6':
+                flag_stop = 1;
+                break;
+            default:
+//                printf("select a number from the menu\n");
+//                menu();
+                break;
+        }
+        if(!flag_stop) printf("Select option: ");
+    }
 
     fclose(filename);
     free(separator);
