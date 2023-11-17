@@ -73,17 +73,16 @@ Node * search_node(Node * root, char * word)
 
     if(strcmp(word, root->word) < 0)
     {
-        root->left = search_node(root->left, word);
+        return search_node(root->left, word);
     }
     else if (strcmp(word, root->word) > 0)
     {
-        root->right = search_node(root->right, word);
+        return search_node(root->right, word);
     }
     else
     {
         return root;
     }
-
 }
 
 enum errors read_from_file(FILE * filename, Node ** root, const char * separator)
@@ -108,10 +107,9 @@ enum errors read_from_file(FILE * filename, Node ** root, const char * separator
             *root = insert_node(*root, buffer);
             if(*root == NULL)
             {
-                //что тут?
+                free(buffer);
                 return INVALID_MEMORY;
             }
-//            printf("%s\n", buffer);
             continue;
         }
 
@@ -131,10 +129,9 @@ enum errors read_from_file(FILE * filename, Node ** root, const char * separator
             *root = insert_node(*root, buffer);
             if(*root == NULL)
             {
-                //что тут?
+                free(buffer);
                 return INVALID_MEMORY;
             }
-//            printf("%s\n", buffer);
             buffer[0] = '\0';
             len_buffer = 0;
         }
@@ -151,21 +148,9 @@ enum errors read_from_file(FILE * filename, Node ** root, const char * separator
             buffer = for_realloc;
         }
     }
-//    printf("\n");
     free(buffer);
     return OK;
 }
-
-//void inorder(Node* root)
-//{
-//    if (root == NULL)
-//    {
-//        return;
-//    }
-//    inorder(root->left);
-//    printf("%s(%d) ", root->word, root->count);
-//    inorder(root->right);
-//}
 
 void inorder(Node* root, int depth) {
     if (root == NULL)
@@ -180,6 +165,16 @@ void inorder(Node* root, int depth) {
     inorder(root->left, depth + 1);
 }
 
+void preorder(FILE * file, Node* root)
+{
+    if (root == NULL) {
+        return;
+    }
+
+    fprintf(file, "%s\n", root->word);
+    preorder(file, root->left);
+    preorder(file, root->right);
+}
 
 Node * delete_tree(Node* root) {
     if (root)
@@ -190,6 +185,24 @@ Node * delete_tree(Node* root) {
         free(root);
     }
     return NULL;
+}
+
+// TODO: порисовать, чтобы 100% понять что происходит
+int max_depth(Node* node)
+{
+    if (node == NULL)
+        return 0;
+    else
+    {
+        int lDepth = max_depth(node->left);
+        int rDepth = max_depth(node->right);
+
+        // использовать максимальную из двух глубин
+        if (lDepth > rDepth)
+            return(lDepth + 1);
+        else
+            return(rDepth + 1);
+    }
 }
 
 void menu()
@@ -203,6 +216,62 @@ void menu()
            "5. Saving a tree to a file and restoring it\n"
            "6. Exit\n"
            );
+}
+
+void search_max_min_word(Node * root, Node ** min, Node ** max)
+{
+    if(root == NULL)
+    {
+        return;
+    }
+    search_max_min_word(root->right, min, max);
+    if(strlen(root->word) > strlen((*max)->word))
+    {
+        *max = root;
+    }
+    if(strlen(root->word) < strlen((*min)->word))
+    {
+        *min = root;
+    }
+    search_max_min_word(root->left, min, max);
+}
+
+void collect_nodes(Node* node, Node*** nodes, int* len, int* capacity)
+{
+    if (node == NULL)
+    {
+        return;
+    }
+
+    collect_nodes(node->left, nodes, len, capacity);
+
+    if (*len == *capacity)
+    {
+        *capacity *= 2;
+        Node** for_realloc = (Node **)realloc(*nodes, *capacity * sizeof(Node*));
+        if (for_realloc == NULL)
+        {
+            printf("Error reallocating memory\n");
+            return;
+        }
+        *nodes = for_realloc;
+    }
+
+    (*nodes)[*len] = node;
+    (*len)++;
+
+    collect_nodes(node->right, nodes, len, capacity);
+}
+
+int compare(const void * a, const void * b)
+{
+    Node *node_a = *(Node**)a;
+    Node *node_b = *(Node**)b;
+    if(node_a->count != node_b->count)
+    {
+        return node_b->count - node_a->count;
+    }
+    return strlen(node_a->word) - strlen(node_b->word);
 }
 
 int main(int argc, char * argv[])
@@ -292,30 +361,70 @@ int main(int argc, char * argv[])
                 }
                 break;
             case '2':
+                printf("Enter the number: ");
+                int count_world;
+                if(scanf("%d", &count_world) != 1)
+                {
+                    printf("incorrect number\n");
+                    while (getchar() != '\n');
+                    break;
+                }
+                while (getchar() != '\n');
 
-                // TODO: вывод первых n наиболее часто встречающихся слов в файле (значение n вводится с консоли)
+                int len = 0, capacity = 2;
+                Node ** array = (Node **) malloc(capacity * sizeof(Node *));
+                if(array == NULL)
+                {
+                    return 0;
+                }
+                collect_nodes(root, &array, &len, &capacity);
+                for(int i = 0; i < len; ++i)
+                {
+                    printf("%s ", array[i]->word);
+                }
+                printf("\n");
 
+                qsort(array, len, sizeof(Node**), compare);
+                for(int i = 0; i < len && i < count_world; ++i)
+                {
+                    printf("%s ", array[i]->word);
+                }
+                printf("\n");
+
+                free(array);
                 break;
             case '3':
-
-                // TODO: Поиск и вывод в контексте вызывающего кода в консоль самого длинного и самого короткого слова (если таковых несколько,необходимо вывести в консоль любое из них)
-
+                Node * min = root;
+                Node * max = root;
+                search_max_min_word(root, &min, &max);
+                printf("minimum word length: %s\n", min->word);
+                printf("maximum word length: %s\n", max->word);
                 break;
             case '4':
-
-                // TODO: поиска глубины данного дерева
-
+                int depth = max_depth(root);
+                printf("depth = %d\n", depth);
                 break;
             case '5':
+                const char filename[9] = "tree.txt";
+                FILE * file = fopen(filename, "w");
+                inorder(root, 0);
+                preorder(file, root);
+                fclose(file);
+                root = delete_tree(root);
 
-                // TODO: кинуть дерево в файл а потом обратно воссоздать такое же
+                file = fopen(filename, "r");
+                read_from_file(file, &root, "\n");
+                printf("\n\n");
+                inorder(root, 0);
+                fclose(file);
 
+                printf("outputting the tree to a file and restoring it is done\n");
                 break;
             case '6':
                 flag_stop = 1;
                 break;
             default:
-//                printf("select a number from the menu\n");
+                printf("select a number from the menu\n");
 //                menu();
                 break;
         }
