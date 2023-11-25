@@ -96,7 +96,6 @@ enum errors read_from_file(FILE * filename, Node ** root, const char * separator
     buffer[0] = '\0';
 
     char c;
-    // TODO: убрать костыль
     char for_sep[2] = " ";
     while(!feof(filename))
     {
@@ -139,7 +138,7 @@ enum errors read_from_file(FILE * filename, Node ** root, const char * separator
         if(len_buffer + 1 == capacity_buffer)
         {
             capacity_buffer *= 2;
-            char * for_realloc = (char *)realloc(buffer, capacity_buffer);
+            char * for_realloc = (char *)realloc(buffer, capacity_buffer * sizeof(Node*));
             if(for_realloc == NULL)
             {
                 free(buffer);
@@ -165,15 +164,15 @@ void inorder(Node* root, int depth) {
     inorder(root->left, depth + 1);
 }
 
-void preorder(FILE * file, Node* root)
+void preorder(FILE * file, Node* root, char * sep)
 {
     if (root == NULL) {
         return;
     }
 
-    fprintf(file, "%s\n", root->word);
-    preorder(file, root->left);
-    preorder(file, root->right);
+    fprintf(file, "%s%c", root->word, sep[0]);
+    preorder(file, root->left, sep);
+    preorder(file, root->right, sep);
 }
 
 Node * delete_tree(Node* root) {
@@ -187,7 +186,6 @@ Node * delete_tree(Node* root) {
     return NULL;
 }
 
-// TODO: порисовать, чтобы 100% понять что происходит
 int max_depth(Node* node)
 {
     if (node == NULL)
@@ -335,7 +333,6 @@ int main(int argc, char * argv[])
             break;
         }
 
-        //TODO: какая же залупа, почитать ещё
         while (getchar() != '\n');
         switch (choice)
         {
@@ -347,7 +344,6 @@ int main(int argc, char * argv[])
                 char buff[21];
                 printf("Enter a search word (limit 20 characters): ");
                 scanf("%20s", buff);
-                //TODO: какая же залупа, почитать ещё
                 while (getchar() != '\n');
 
                 Node * search = search_node(root, buff);
@@ -408,12 +404,12 @@ int main(int argc, char * argv[])
                 const char filename[9] = "tree.txt";
                 FILE * file = fopen(filename, "w");
                 inorder(root, 0);
-                preorder(file, root);
+                preorder(file, root, separator);
                 fclose(file);
                 root = delete_tree(root);
 
                 file = fopen(filename, "r");
-                read_from_file(file, &root, "\n");
+                read_from_file(file, &root, separator);
                 printf("\n\n");
                 inorder(root, 0);
                 fclose(file);
