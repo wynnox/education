@@ -234,14 +234,16 @@ void search_max_min_word(Node * root, Node ** min, Node ** max)
     search_max_min_word(root->left, min, max);
 }
 
-void collect_nodes(Node* node, Node*** nodes, int* len, int* capacity)
+enum errors collect_nodes(Node* node, Node*** nodes, int* len, int* capacity)
 {
+    enum errors err = OK;
     if (node == NULL)
     {
-        return;
+        return OK;
     }
 
-    collect_nodes(node->left, nodes, len, capacity);
+    err = collect_nodes(node->left, nodes, len, capacity);
+    if(err == INVALID_MEMORY) return INVALID_MEMORY;
 
     if (*len == *capacity)
     {
@@ -249,8 +251,7 @@ void collect_nodes(Node* node, Node*** nodes, int* len, int* capacity)
         Node** for_realloc = (Node **)realloc(*nodes, *capacity * sizeof(Node*));
         if (for_realloc == NULL)
         {
-            printf("Error reallocating memory\n");
-            return;
+            return INVALID_MEMORY;
         }
         *nodes = for_realloc;
     }
@@ -258,7 +259,10 @@ void collect_nodes(Node* node, Node*** nodes, int* len, int* capacity)
     (*nodes)[*len] = node;
     (*len)++;
 
-    collect_nodes(node->right, nodes, len, capacity);
+    err = collect_nodes(node->right, nodes, len, capacity);
+    if(err == INVALID_MEMORY) return INVALID_MEMORY;
+
+    return err;
 }
 
 int compare(const void * a, const void * b)
@@ -340,11 +344,40 @@ int main(int argc, char * argv[])
                 menu();
                 break;
             case '1':
-                // TODO: поменять на динамику со статики
-                char buff[21];
-                printf("Enter a search word (limit 20 characters): ");
-                scanf("%20s", buff);
-                while (getchar() != '\n');
+                int capacity_buffer = 20;
+                char * buff = (char *) malloc(capacity_buffer * sizeof(char));
+                if(buff == NULL)
+                {
+                    fclose(filename);
+                    free(separator);
+                    delete_tree(root);
+                    printf("memory allocation error\n");
+                    return INVALID_MEMORY;
+                }
+                printf("Enter a search word: ");
+                char c;
+                int idx = 0;
+                c = getchar();
+                while(c != '\n')
+                {
+                    buff[idx++] = c;
+                    if(idx == capacity_buffer)
+                    {
+                        capacity_buffer *= 2;
+                        char * for_realloc = (char *) realloc(buff, capacity_buffer);
+                        if(for_realloc == NULL)
+                        {
+                            fclose(filename);
+                            free(separator);
+                            delete_tree(root);
+                            printf("memory allocation error\n");
+                            return INVALID_MEMORY;
+                        }
+                        buff = for_realloc;
+                    }
+                    c = getchar();
+                }
+                buff[idx] = '\0';
 
                 Node * search = search_node(root, buff);
                 if(search == NULL)
@@ -355,6 +388,7 @@ int main(int argc, char * argv[])
                 {
                     printf("number of words '%s' found in the text: %d\n", search->word, search->count);
                 }
+                free(buff);
                 break;
             case '2':
                 printf("Enter the number: ");
@@ -371,9 +405,22 @@ int main(int argc, char * argv[])
                 Node ** array = (Node **) malloc(capacity * sizeof(Node *));
                 if(array == NULL)
                 {
-                    return 0;
+                    free(array);
+                    fclose(filename);
+                    free(separator);
+                    delete_tree(root);
+                    printf("memory allocation error\n");
+                    return INVALID_MEMORY;
                 }
-                collect_nodes(root, &array, &len, &capacity);
+                if (collect_nodes(root, &array, &len, &capacity) != OK)
+                {
+                    free(array);
+                    fclose(filename);
+                    free(separator);
+                    delete_tree(root);
+                    printf("memory allocation error\n");
+                    return INVALID_MEMORY;
+                }
                 for(int i = 0; i < len; ++i)
                 {
                     printf("%s ", array[i]->word);
@@ -421,7 +468,6 @@ int main(int argc, char * argv[])
                 break;
             default:
                 printf("select a number from the menu\n");
-//                menu();
                 break;
         }
         if(!flag_stop) printf("Select option: ");
