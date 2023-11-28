@@ -12,7 +12,8 @@ enum errors
     OK,
     INVALID_INPUT,
     INVALID_MEMORY,
-    ERROR_OPEN_FILE
+    ERROR_OPEN_FILE,
+    DUBLICATE_KEY
 };
 
 typedef struct Ht_item
@@ -87,6 +88,7 @@ Ht_item * create_item(char* key, char* value)
     }
     strcpy(item->value, value);
 
+//    item->hash = hash_function(key);
     item->next = NULL;
     item->hash = 0;
     return item;
@@ -116,9 +118,9 @@ Hash_Table * destroy_hashtable(Hash_Table * table)
     return NULL;
 }
 
-void insert(Hash_Table* table, char* key, char* value)
+void insert(Hash_Table* table, char* key, char* value, int hash)
 {
-    int hash = hash_function(key);
+//    int hash = hash_function(key);
     int index = hash % table->size;
 
     Ht_item * item = create_item(key, value);
@@ -133,7 +135,15 @@ void insert(Hash_Table* table, char* key, char* value)
         Ht_item* current = table->items[index];
         while (current->next != NULL)
         {
+            if(strcmp(current->key, item->key) == 0)
+            {
+                return;
+            }
             current = current->next;
+        }
+        if(strcmp(current->key, item->key) == 0)
+        {
+            return;
         }
         current->next = item;
     }
@@ -150,7 +160,7 @@ void print_hashtable(Hash_Table *table)
             Ht_item *current = table->items[i];
             while (current != NULL)
             {
-                printf("  Key: %s, Value: %s\n", current->key, current->value);
+                printf("  Key: '%s', Value: '%s'\n", current->key, current->value);
                 current = current->next;
             }
             printf("\n");
@@ -181,7 +191,7 @@ enum errors read_str(FILE * input, char ** buffer, int * capacity, char * c)
     return OK;
 }
 
-enum errors read_define(FILE * input, Hash_Table *table, char ** str, char * c, int * capacity_str)
+enum errors read_define(FILE * input, Hash_Table * table, char ** str, char * c, int * capacity_str)
 {
     int capacity_key = 20, capacity_value = 20;
     char * key = (char *)malloc(capacity_key * sizeof(char));
@@ -198,7 +208,12 @@ enum errors read_define(FILE * input, Hash_Table *table, char ** str, char * c, 
 
     while(!feof(input))
     {
-        read_str(input, str, capacity_str, c);
+        if(read_str(input, str, capacity_str, c) != OK)
+        {
+            free(key);
+            free(value);
+            return INVALID_MEMORY;
+        }
         if(strcmp("#define", *str) == 0)
         {
             if (read_str(input, &key, &capacity_key, c) != OK)
@@ -207,13 +222,27 @@ enum errors read_define(FILE * input, Hash_Table *table, char ** str, char * c, 
                 free(value);
                 return INVALID_MEMORY;
             }
-            if (read_str(input, &value, &capacity_value, c) != OK)
+            int idx = 0;
+            *c = fgetc(input);
+            while(*c != '\n')
             {
-                free(key);
-                free(value);
-                return INVALID_MEMORY;
+                (value)[idx++] = *c;
+                if(capacity_value == idx)
+                {
+                    capacity_value *= 2;
+                    char * for_realloc = (char *) realloc(value, capacity_value);
+                    if(for_realloc == NULL)
+                    {
+                        free(key);
+                        free(value);
+                        return INVALID_MEMORY;
+                    }
+                    value = for_realloc;
+                }
+                *c = fgetc(input);
             }
-            insert(table, key, value);
+            value[idx] = '\0';
+            insert(table, key, value, hash_function(key));
         }
         else
         {
@@ -226,7 +255,7 @@ enum errors read_define(FILE * input, Hash_Table *table, char ** str, char * c, 
     return OK;
 }
 
-int check_needs_rebuilt(HashTable* table)
+int check_needs_rebuilt(Hash_Table * table)
 {
     int min = INT_MAX;
     int max = 0;
@@ -234,19 +263,24 @@ int check_needs_rebuilt(HashTable* table)
     {
         int current_len = 0;
         Ht_item* item = table->items[i];
+        if(item == NULL) continue;
         while (item != NULL)
         {
             current_len++;
             item = item->next;
         }
-        if (current_len < min) {
-            min = chainLen;
+        if (current_len < min)
+        {
+            min = current_len;
         }
-        if (current_len > max) {
-            max = chainLen;
+        if (current_len > max)
+        {
+            max = current_len;
         }
     }
-    double res = max / min;
+    printf("min collision:%d\nmax collision:%d\n", min, max);
+    double res = (double)max / min;
+    printf("%lf\n", res);
     if(res - 2 > EPSILON)
     {
         return 1;
@@ -257,15 +291,93 @@ int check_needs_rebuilt(HashTable* table)
     }
 }
 
-void rebuild_hashtable(HashTable* table, int new_size)
+int is_prime(int num)
 {
-
+    if(num % 2 == 0)
+    {
+        return 0;
+    }
+    for(int i = 3; i < num / 2; i += 2)
+    {
+        if(num % i == 0)
+        {
+            return 0;
+        }
+    }
+    return 1;
 }
 
-//enum errors replace_text()
-//{
-//    return OK;
-//}
+void rebuild_hashtable(Hash_Table * table)
+{
+    int old_size = table->size;
+    Ht_item ** old = table->items;
+    int new_size = table->size * 2;
+    for(; !is_prime(new_size); ++new_size);
+    table->size = new_size;
+
+    table->items = (Ht_item **)calloc(new_size, sizeof(Ht_item*));
+
+    for(int i = 0; i < old_size; ++i)
+    {
+        Ht_item* item = old[i];
+        while (item)
+        {
+            insert(table, item->key, item->value, item->hash);
+            Ht_item* old_item = item;
+            item = item->next;
+            destroy_item(old_item);
+        }
+    }
+    free(old);
+}
+
+char* ht_search(const Hash_Table* table, char* key)
+{
+    int index = hash_function(key) % table->size;
+    Ht_item* item = table->items[index];
+
+    if (item != NULL)
+    {
+        if (strcmp(item->key, key) == 0)
+            return item->value;
+    }
+
+    return NULL;
+}
+
+enum errors replace_text(const Hash_Table * table, FILE * input, FILE * output,  char ** str, char * c, int * capacity_str)
+{
+    int flag_stop = 0;
+    while(!flag_stop)
+    {
+        char * s = ht_search(table, *str);
+        if(s)
+        {
+            printf("1");
+            if(*c == EOF)
+            {
+                flag_stop = 1;
+                fprintf(output,"%s", s);
+            }
+            else fprintf(output,"%s%c", s, *c);
+        }
+        else
+        {
+            printf("s");
+            if(*c == EOF)
+            {
+                flag_stop = 1;
+                fprintf(output,"%s", *str);
+            }
+            else fprintf(output,"%s%c", *str, *c);
+        }
+        if(read_str(input, str, capacity_str, c) != OK)
+        {
+            return INVALID_MEMORY;
+        }
+    }
+    return OK;
+}
 
 int main(int agrc, char * argv[])
 {
@@ -311,9 +423,7 @@ int main(int agrc, char * argv[])
 
     /*
      * если одинаковый ключ, то все равно добавляет, надо проверить на это
-     * value может быть разделитемем спокойно, так что надо допилить
      *
-     * пересборка
      * чтение и замена, скидывание в файл темп
      * закрытие и открытие файлов, туда кидаем из темпа
      */
@@ -333,6 +443,12 @@ int main(int agrc, char * argv[])
     if(check_needs_rebuilt(table))
     {
         printf("hash table after rebuild\n");
+        rebuild_hashtable(table);
+        while(check_needs_rebuilt(table))
+        {
+            rebuild_hashtable(table);
+        }
+        printf("new size: %d\n", table->size);
         print_hashtable(table);
     }
     else
@@ -340,7 +456,15 @@ int main(int agrc, char * argv[])
         printf("hash table is not rebuilt\n");
     }
 
-
+    if(replace_text(table, filename, temp, &buffer, &c, &capacity) != OK)
+    {
+        free(buffer);
+        destroy_hashtable(table);
+        fclose(filename);
+        fclose(temp);
+        printf("memory allocation error\n");
+        return INVALID_MEMORY;
+    }
 
 
     free(buffer);
