@@ -3,8 +3,8 @@
 #include <string.h>
 #include <limits.h>
 
-//#define SIZE_HASH 128
-#define SIZE_HASH 6
+#define SIZE_HASH 128
+//#define SIZE_HASH 6
 #define EPSILON 1e-6
 
 enum errors
@@ -353,7 +353,6 @@ enum errors replace_text(const Hash_Table * table, FILE * input, FILE * output, 
         char * s = ht_search(table, *str);
         if(s)
         {
-            printf("1");
             if(*c == EOF)
             {
                 flag_stop = 1;
@@ -363,7 +362,6 @@ enum errors replace_text(const Hash_Table * table, FILE * input, FILE * output, 
         }
         else
         {
-            printf("s");
             if(*c == EOF)
             {
                 flag_stop = 1;
@@ -377,6 +375,15 @@ enum errors replace_text(const Hash_Table * table, FILE * input, FILE * output, 
         }
     }
     return OK;
+}
+
+void replace_file(FILE * input, FILE * output, char * buffer, int size)
+{
+    while (!feof(input))
+    {
+        fgets(buffer, size - 1, input);
+        fprintf(output, "%s", buffer);
+    }
 }
 
 int main(int agrc, char * argv[])
@@ -421,13 +428,6 @@ int main(int agrc, char * argv[])
         return INVALID_MEMORY;
     }
 
-    /*
-     * если одинаковый ключ, то все равно добавляет, надо проверить на это
-     *
-     * чтение и замена, скидывание в файл темп
-     * закрытие и открытие файлов, туда кидаем из темпа
-     */
-
     if(read_define(filename, table, &buffer, &c, &capacity) != OK)
     {
         destroy_hashtable(table);
@@ -466,6 +466,25 @@ int main(int agrc, char * argv[])
         return INVALID_MEMORY;
     }
 
+    fclose(filename);
+    fclose(temp);
+
+    filename = fopen(argv[1], "w");
+    if(filename == NULL)
+    {
+        printf("Error opening file %s\n", argv[1]);
+        return ERROR_OPEN_FILE;
+    }
+
+    temp = fopen("temp.txt", "r");
+    if(temp == NULL)
+    {
+        printf("Error opening file\n");
+        return ERROR_OPEN_FILE;
+    }
+
+    replace_file(temp, filename, buffer, capacity);
+    printf("replacing <def_name> with <value> is done\n");
 
     free(buffer);
     destroy_hashtable(table);
