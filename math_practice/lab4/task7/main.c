@@ -3,6 +3,7 @@
 #include <string.h>
 #include <limits.h>
 #include <errno.h>
+#include <ctype.h>
 
 
 #define SIZE_CAPACITY 20
@@ -12,19 +13,21 @@ enum errors
     OK,
     INVALID_INPUT,
     INVALID_MEMORY,
-    ERROR_OPEN_FILE
+    ERROR_OPEN_FILE,
+    OVERFLOW_ERROR,
+    DIVISION_BY_ZERO
 };
 
 typedef struct MemoryCell
 {
     char * name;
-    int value;
+    long int value;
 } MemoryCell;
 
 typedef struct Variables
 {
-    int capacity;
-    int size;
+    long int capacity;
+    long int size;
     MemoryCell ** array;
 } Variables;
 
@@ -49,7 +52,7 @@ Variables * create_variables()
     return var;
 }
 
-MemoryCell * create_mc(char * name, int num)
+MemoryCell * create_mc(char * name, long int num)
 {
     MemoryCell * var = (MemoryCell *) malloc(sizeof(MemoryCell));
     if(var == NULL)
@@ -57,7 +60,7 @@ MemoryCell * create_mc(char * name, int num)
         return NULL;
     }
 
-    int len_name = strlen(name);
+    long int len_name = strlen(name);
 
     var->name = (char *) malloc((len_name + 1) * sizeof(char ));
     if(var->name == NULL)
@@ -103,7 +106,7 @@ MemoryCell* search_variable(Variables* vars, char* name)
     return NULL;
 }
 
-enum errors add_variable(Variables* vars, char* name, int num)
+enum errors add_variable(Variables* vars, char* name, long int num)
 {
     if (vars->size == vars->capacity) {
         vars->capacity *= 2;
@@ -161,19 +164,23 @@ enum errors read_str(FILE * input, char ** str, int * capacity)
     }
     (*str)[idx] = '\0';
     c = fgetc(input);
+    if(c == EOF)
+    {
+        return OK;
+    }
     return OK;
 }
 
-enum errors convert_str_to_int (const char *str, int * result, int base)
+enum errors convert_str_to_int (const char *str, long int * result, int base)
 {
     char *endptr;
-    *result = strtol(str, &endptr, base);
+    long num = strtol(str, &endptr, base);
 
-    if (errno == ERANGE && (*result == INT_MAX || *result == INT_MIN))
+    if (errno == ERANGE && (num == LONG_MAX || num == LONG_MIN))
     {
         return INVALID_INPUT;
     }
-    else if (errno != 0 && *result == 0)
+    else if (errno != 0 && num == 0)
     {
         return INVALID_INPUT;
     }
@@ -182,7 +189,26 @@ enum errors convert_str_to_int (const char *str, int * result, int base)
         return INVALID_INPUT;
     }
 
+    *result = num;
     return OK;
+}
+
+
+int check_is_digit(char * str)
+{
+    size_t i = 0;
+    if(str[i] == '-')
+    {
+        i = 1;
+    }
+    for(; i < strlen(str); ++i)
+    {
+        if(!isdigit(str[i]))
+        {
+            return 0;
+        }
+    }
+    return 1;
 }
 
 enum errors execution_instructions(char * str, Variables * vars, const char * operations)
@@ -191,105 +217,155 @@ enum errors execution_instructions(char * str, Variables * vars, const char * op
     char operation;
     if(op != NULL)
     {
-        printf("%c\n", *op);
         operation = *op;
     }
 
-    //добавили или нашли переменную
     char * p = strtok(str, "=");
     MemoryCell * result = search_variable(vars, p);
     if(result == NULL)
     {
-        add_variable(vars, p, 1);
+        enum errors err = add_variable(vars, p, 0);
+        if(err == INVALID_MEMORY)
+        {
+            return INVALID_MEMORY;
+        }
         result = search_variable(vars, p);
-        printf("->%s\n", result->name);
-    }
-    else
-    {
-        printf("-->%s\n", result->name);
     }
 
     if(op != NULL)
     {
-        int num1, num2;
+        long int num1, num2;
         p = strtok(NULL, operations);
         MemoryCell * var1 = search_variable(vars, p);
+
         if(var1 == NULL)
         {
-            // либо число либо переменная которой ещё нет
-            convert_str_to_int(p, &num1, 10);
-//            printf("%d", num1);
+            enum errors err = convert_str_to_int(p, &num1, 10);
+            if(err == INVALID_INPUT)
+            {
+                if(check_is_digit(p))
+                {
+                    return OVERFLOW_ERROR;
+                }
+                else
+                {
+                    return INVALID_INPUT;
+                }
+            }
         }
         else
         {
             num1 = var1->value;
         }
-//        printf("!%s", var1->name);
 
         p = strtok(NULL, operations);
         MemoryCell * var2 = search_variable(vars, p);
         if(var2 == NULL)
         {
-            convert_str_to_int(p, &num2, 10);
-//            printf("%d", num2);
+            enum errors err = convert_str_to_int(p, &num2, 10);
+            if(err == INVALID_INPUT)
+            {
+                if(check_is_digit(p))
+                {
+                    return OVERFLOW_ERROR;
+                }
+                else
+                {
+                    return INVALID_INPUT;
+                }
+            }
         }
         else
         {
             num2 = var2->value;
         }
-        printf("num1 = %d num2 = %d\n", num1, num2);
+
 
         if(operation == '+')
         {
+            if (num1 > 0 && num2 > LONG_MAX - num1) {
+                return OVERFLOW_ERROR;
+            } else if (num1 < 0 && num2 < LONG_MIN - num1) {
+                return OVERFLOW_ERROR;
+            }
             result->value = num1 + num2;
-            printf("%s = %d\n", result->name, result->value);
+        }
+        else if(operation == '-')
+        {
+            if (num1 > 0 && num2 < LONG_MIN + num1) {
+                return OVERFLOW_ERROR;
+            } else if (num1 < 0 && num2 > LONG_MAX + num1) {
+                return OVERFLOW_ERROR;
+            }
+            result->value = num1 - num2;
         }
         else if (operation == '*')
         {
+            if (num1 > 0 && num2 > LONG_MAX / num1) {
+                return OVERFLOW_ERROR;
+            } else if (num1 < 0 && num2 < LONG_MIN / num1) {
+                return OVERFLOW_ERROR;
+            }
             result->value = num1 * num2;
-            printf("%s = %d\n", result->name, result->value);
-
         }
-//        else
-//        {
-//            printf("pupupu\n");
-//        }
-//            printf("!%s", var2->name);
+        else if(operation == '/')
+        {
+            if(num2 == 0)
+            {
+                return DIVISION_BY_ZERO;
+            }
+            result->value = num1 / num2;
+        }
+        else if(operation == '%')
+        {
+            if(num2 == 0)
+            {
+                return DIVISION_BY_ZERO;
+            }
+            result->value = num1 % num2;
+        }
     }
     else
     {
-        int num;
-        p = strtok(NULL, operations);
+        long int num;
+        p = strtok(NULL, "=");
+//        printf("%s", p);
         MemoryCell * var = search_variable(vars, p);
 
         if(var == NULL)
         {
-            convert_str_to_int(p, &num, 10);
-            result->value = num;
-            printf("%s = %d\n", result->name, result->value);
+            enum errors err = convert_str_to_int(p, &num, 10);
+            if(err == INVALID_INPUT)
+            {
+                if(check_is_digit(p))
+                {
+                    return OVERFLOW_ERROR;
+                }
+                else
+                {
+                    return INVALID_INPUT;
+                }
+            }
         }
         else
         {
-            result->value = var->value;
-            printf("pupupupu\n");
-            printf("%s = %d\n", result->name, result->value);
+            num = var->value;
         }
+        result->value = num;
     }
-
     return OK;
 }
+
 
 void print_all(Variables * vars)
 {
     for(int i = 0; i < vars->size; ++i)
     {
         MemoryCell * vvv = vars->array[i];
-        printf("%s: %d\n", vvv->name, vvv->value);
+        printf("%s: %ld\n", vvv->name, vvv->value);
     }
-    printf("%d", vars->size);
+    printf("%ld\n", vars->size);
 }
-//
-//void print_var() {}
 
 int main(int argc, char * argv[])
 {
@@ -336,7 +412,6 @@ int main(int argc, char * argv[])
             destroy_variables(vars);
             return INVALID_MEMORY;
         }
-//        printf("%s\n", buffer);
         if(strcmp("print", buffer) == 0)
         {
             printf("print all\n");
@@ -347,24 +422,56 @@ int main(int argc, char * argv[])
             printf("print var\n");
             char * p = strtok(buffer, " ");
             p = strtok(NULL, " ");
-            printf("%s\n", p);
             MemoryCell * var = search_variable(vars, p);
             if(var != NULL)
             {
-                printf("%s: %d\n", var->name, var->value);
+                printf("%s: %ld\n", var->name, var->value);
             }
             else
             {
-                ////
+                printf("unknown variable\n");
+                destroy_variables(vars);
+                fclose(filename);
+                free(buffer);
+                return INVALID_INPUT;
             }
-
         }
         else
         {
-            execution_instructions(buffer, vars, operations);
+            enum errors err=execution_instructions(buffer, vars, operations);
+            if(err == INVALID_INPUT)
+            {
+                printf("unknown variable\n");
+                destroy_variables(vars);
+                fclose(filename);
+                free(buffer);
+                return INVALID_INPUT;
+            }
+            else if(err == INVALID_MEMORY)
+            {
+                printf("memory allocation error\n");
+                fclose(filename);
+                free(buffer);
+                destroy_variables(vars);
+                return INVALID_MEMORY;
+            }
+            else if(err == OVERFLOW_ERROR)
+            {
+                printf("overflow occurred\n");
+                fclose(filename);
+                free(buffer);
+                destroy_variables(vars);
+                return OVERFLOW_ERROR;
+            }
+            else if(err == DIVISION_BY_ZERO)
+            {
+                printf("division by zero\n");
+                fclose(filename);
+                free(buffer);
+                destroy_variables(vars);
+                return DIVISION_BY_ZERO;
+            }
         }
-
-
     }
 
     destroy_variables(vars);
