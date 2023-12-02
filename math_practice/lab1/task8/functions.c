@@ -17,7 +17,7 @@ enum errors convert_str_to_ll_int (const char *str, long long int * result, int 
     return OK;
 }
 
-enum errors read_input_from_file_into_array(FILE ** input, char** buff, int* len, int* min_base)
+enum errors read_input_from_file_into_array(FILE ** input, char** buff, int* len, int* min_base, int * capacity)
 {
     *len = 0;
     *min_base = 2;
@@ -61,11 +61,15 @@ enum errors read_input_from_file_into_array(FILE ** input, char** buff, int* len
         {
             return INVALID_INPUT;
         }
-        if(*len == 201)
+        if(*len == *capacity)
         {
-//            if(input != NULL) fclose(*input);
-//            free(buff);
-            return INVALID_INPUT;
+            *capacity *= 2;
+            char * for_realloc = (char *) realloc(*buff, *capacity);
+            if(for_realloc == NULL)
+            {
+                return INVALID_MEMORY;
+            }
+            *buff = for_realloc;
         }
         if(*min_base > 36)
         {
@@ -73,7 +77,8 @@ enum errors read_input_from_file_into_array(FILE ** input, char** buff, int* len
         }
         symbol = fgetc(*input);
     }
-    if(*len == 0 && flag_skip) (*buff)[(*len)++] = '0';
+    if(*len == 0 && flag_skip && flag_negative == 0) (*buff)[(*len)++] = '0';
+    if(*len == 1 && flag_skip && flag_negative) (*buff)[(*len)++] = '0';
     (*buff)[(*len)] = '\0';
     return OK;
 }

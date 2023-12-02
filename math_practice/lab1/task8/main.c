@@ -19,7 +19,8 @@ int main(int argc, char* argv[])
         return ERROR_OPEN_FILE;
     }
 
-    char * buffer = (char *)malloc(201 * sizeof(char));
+    int capacity = 2;
+    char * buffer = (char *)malloc(capacity * sizeof(char));
     if(buffer == NULL)
     {
         printf("Ошибка: ошибка при выделении памяти");
@@ -31,13 +32,22 @@ int main(int argc, char* argv[])
 
     while (!feof(input))
     {
-        if(read_input_from_file_into_array(&input, &buffer, &len, &min_base) != OK)
+        enum errors err = read_input_from_file_into_array(&input, &buffer, &len, &min_base, &capacity);
+        if(err == INVALID_INPUT)
         {
             if(input != NULL) fclose(input);
             if(output != NULL) fclose(output);
             free(buffer);
             printf("некорректный ввод");
             return INVALID_INPUT;
+        }
+        else if(err == INVALID_MEMORY)
+        {
+            free(buffer);
+            printf("INVALID_MEMORY\n");
+            fclose(input);
+            fclose(output);
+            return INVALID_MEMORY;
         }
         if(len > 0)
         {

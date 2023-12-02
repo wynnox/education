@@ -18,6 +18,6 @@ enum errors
 
 enum errors read_write_file(FILE** input, FILE** output);
 enum errors convert_str_to_ll_int (const char *str, long long int * result, int base);
-enum errors read_input_from_file_into_array(FILE ** input, char** buff, int* len, int* min_base);
+enum errors read_input_from_file_into_array(FILE ** input, char** buff, int* len, int* min_base, int * capacity);
 
 #endif
