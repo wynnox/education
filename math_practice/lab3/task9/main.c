@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 enum errors
 {
@@ -211,8 +212,9 @@ void menu()
            "2. Displaying the most frequently occurring words\n"
            "3. Finding the longest and shortest word\n"
            "4. Finding the depth of a given tree\n"
-           "5. Saving a tree to a file and restoring it\n"
-           "6. Exit\n"
+           "5. Saving a tree to a file\n"
+           "6. Restoring a tree from file\n"
+           "7. Exit\n"
            );
 }
 
@@ -276,6 +278,17 @@ int compare(const void * a, const void * b)
     return strlen(node_a->word) - strlen(node_b->word);
 }
 
+void generate_filename(char * str)
+{
+    srand(time(NULL));
+    for (int i = 0; i < 5; ++i)
+    {
+        str[i] = rand() % 95 + 33;
+    }
+    str[5] = '\0';
+    strcat(str, ".txt");
+}
+
 int main(int argc, char * argv[])
 {
     if (argc < 3)
@@ -324,7 +337,20 @@ int main(int argc, char * argv[])
         return INVALID_MEMORY;
     }
 
+    fclose(filename);
+
     inorder(root, 0);
+
+    int cap_temp = 10;
+    char * temp_file = (char *) malloc(cap_temp * sizeof(char ));
+    if(temp_file == NULL)
+    {
+        printf("memory allocation error\n");
+        free(separator);
+        root = delete_tree(root);
+        return INVALID_MEMORY;
+    }
+    generate_filename(temp_file);
 
     menu();
     printf("Select option: ");
@@ -344,12 +370,19 @@ int main(int argc, char * argv[])
                 menu();
                 break;
             case '1':
+                if(root == NULL)
+                {
+                    printf("The tree is empty\n"
+                           "I can't find the number of words in an empty tree\n");
+                    break;
+                }
+
                 int capacity_buffer = 20;
                 char * buff = (char *) malloc(capacity_buffer * sizeof(char));
                 if(buff == NULL)
                 {
-                    fclose(filename);
                     free(separator);
+                    free(temp_file);
                     delete_tree(root);
                     printf("memory allocation error\n");
                     return INVALID_MEMORY;
@@ -367,8 +400,8 @@ int main(int argc, char * argv[])
                         char * for_realloc = (char *) realloc(buff, capacity_buffer);
                         if(for_realloc == NULL)
                         {
-                            fclose(filename);
                             free(separator);
+                            free(temp_file);
                             delete_tree(root);
                             printf("memory allocation error\n");
                             return INVALID_MEMORY;
@@ -391,6 +424,13 @@ int main(int argc, char * argv[])
                 free(buff);
                 break;
             case '2':
+                if(root == NULL)
+                {
+                    printf("The tree is empty\n"
+                           "I can't print n frequently occurring words\n");
+                    break;
+                }
+
                 printf("Enter the number: ");
                 int count_world;
                 if(scanf("%d", &count_world) != 1)
@@ -406,18 +446,18 @@ int main(int argc, char * argv[])
                 if(array == NULL)
                 {
                     free(array);
-                    fclose(filename);
                     free(separator);
                     delete_tree(root);
+                    free(temp_file);
                     printf("memory allocation error\n");
                     return INVALID_MEMORY;
                 }
                 if (collect_nodes(root, &array, &len, &capacity) != OK)
                 {
                     free(array);
-                    fclose(filename);
                     free(separator);
                     delete_tree(root);
+                    free(temp_file);
                     printf("memory allocation error\n");
                     return INVALID_MEMORY;
                 }
@@ -437,6 +477,13 @@ int main(int argc, char * argv[])
                 free(array);
                 break;
             case '3':
+                if(root == NULL)
+                {
+                    printf("The tree is empty\n"
+                           "I can't figure out the shortest and longest word\n");
+                    break;
+                }
+
                 Node * min = root;
                 Node * max = root;
                 search_max_min_word(root, &min, &max);
@@ -444,26 +491,68 @@ int main(int argc, char * argv[])
                 printf("maximum word length: %s\n", max->word);
                 break;
             case '4':
+                if(root == NULL)
+                {
+                    printf("The tree is empty\n");
+                }
+
                 int depth = max_depth(root);
                 printf("depth = %d\n", depth);
                 break;
             case '5':
-                const char filename[9] = "tree.txt";
-                FILE * file = fopen(filename, "w");
-                inorder(root, 0);
+                if(root == NULL)
+                {
+                    printf("The tree is empty\n");
+                }
+
+                printf("file: %s\n", temp_file);
+
+                FILE * file = fopen(temp_file, "w");
+                if(file == NULL)
+                {
+                    printf("Error opening file %s\n", temp_file);
+                    free(separator);
+                    free(temp_file);
+                    delete_tree(root);
+                    return ERROR_OPEN_FILE;
+                }
+
+                printf("The tree before saving to a file looks like this:\n");
+                if(root == NULL)
+                    printf("\n");
+                else
+                    inorder(root, 0);
                 preorder(file, root, separator);
                 fclose(file);
                 root = delete_tree(root);
 
-                file = fopen(filename, "r");
-                read_from_file(file, &root, separator);
-                printf("\n\n");
-                inorder(root, 0);
-                fclose(file);
-
-                printf("outputting the tree to a file and restoring it is done\n");
+                printf("outputting the tree to a file is done\n");
                 break;
             case '6':
+                if(root == NULL)
+                {
+                    printf("The tree is empty\n");
+                }
+
+                file = fopen(temp_file, "r");
+                if(file == NULL)
+                {
+                    printf("Error opening file %s\n", temp_file);
+                    free(separator);
+                    delete_tree(root);
+                    free(temp_file);
+                    return ERROR_OPEN_FILE;
+                }
+
+                read_from_file(file, &root, separator);
+                printf("The tree after restoration from the file looks like this:\n");
+                if(root == NULL)
+                    printf("\n");
+                else
+                    inorder(root, 0);
+                fclose(file);
+                break;
+            case '7':
                 flag_stop = 1;
                 break;
             default:
@@ -473,7 +562,7 @@ int main(int argc, char * argv[])
         if(!flag_stop) printf("Select option: ");
     }
 
-    fclose(filename);
+    free(temp_file);
     free(separator);
     delete_tree(root);
 
