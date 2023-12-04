@@ -49,17 +49,18 @@ Node * insert_node(Node * root, char * word)
         return create_node(word);
     }
 
-    if(strcmp(word, root->word) < 0)
+    int cmp = strcmp(word, root->word);
+    if(cmp == 0)
+    {
+        root->count++;
+    }
+    else if(cmp < 0)
     {
         root->left = insert_node(root->left, word);
     }
-    else if (strcmp(word, root->word) > 0)
-    {
-        root->right = insert_node(root->right, word);
-    }
     else
     {
-        root->count++;
+        root->right = insert_node(root->right, word);
     }
 
     return root;
@@ -72,17 +73,18 @@ Node * search_node(Node * root, char * word)
         return NULL;
     }
 
-    if(strcmp(word, root->word) < 0)
+    int cmp = strcmp(word, root->word);
+    if(cmp == 0)
+    {
+        return root;
+    }
+    else if(cmp < 0)
     {
         return search_node(root->left, word);
     }
-    else if (strcmp(word, root->word) > 0)
-    {
-        return search_node(root->right, word);
-    }
     else
     {
-        return root;
+        return search_node(root->right, word);
     }
 }
 
