@@ -150,11 +150,11 @@ enum errors read_str(FILE * input, char ** str, int * capacity)
     while (c != ';')
     {
         (*str)[idx++] = c;
-        if(idx == *capacity)
+        if (idx == *capacity)
         {
             *capacity *= 2;
-            char * for_realloc = (char *) realloc(*str, *capacity);
-            if(for_realloc == NULL)
+            char * for_realloc = (char *)realloc(*str, *capacity);
+            if (for_realloc == NULL)
             {
                 return INVALID_MEMORY;
             }
@@ -164,7 +164,7 @@ enum errors read_str(FILE * input, char ** str, int * capacity)
     }
     (*str)[idx] = '\0';
     c = fgetc(input);
-    if(c == EOF)
+    if (c == EOF)
     {
         return OK;
     }
@@ -193,14 +193,9 @@ enum errors convert_str_to_int (const char *str, long int * result, int base)
     return OK;
 }
 
-
 int check_is_digit(char * str)
 {
     size_t i = 0;
-    if(str[i] == '-')
-    {
-        i = 1;
-    }
     for(; i < strlen(str); ++i)
     {
         if(!isdigit(str[i]))
@@ -211,148 +206,192 @@ int check_is_digit(char * str)
     return 1;
 }
 
-enum errors execution_instructions(char * str, Variables * vars, const char * operations)
+enum errors get_num(MemoryCell * var, long int * num, char * buffer, int * flag_negative)
 {
-    char * op = strpbrk(str, operations);
-    char operation;
-    if(op != NULL)
+    if(var == NULL)
     {
-        operation = *op;
-    }
-
-    char * p = strtok(str, "=");
-    MemoryCell * result = search_variable(vars, p);
-    if(result == NULL)
-    {
-        enum errors err = add_variable(vars, p, 0);
-        if(err == INVALID_MEMORY)
+        enum errors err = convert_str_to_int(buffer, num, 10);
+        if(err == INVALID_INPUT)
         {
-            return INVALID_MEMORY;
-        }
-        result = search_variable(vars, p);
-    }
-
-    if(op != NULL)
-    {
-        long int num1, num2;
-        p = strtok(NULL, operations);
-        MemoryCell * var1 = search_variable(vars, p);
-
-        if(var1 == NULL)
-        {
-            enum errors err = convert_str_to_int(p, &num1, 10);
-            if(err == INVALID_INPUT)
+            if(check_is_digit(buffer))
             {
-                if(check_is_digit(p))
-                {
-                    return OVERFLOW_ERROR;
-                }
-                else
-                {
-                    return INVALID_INPUT;
-                }
+                return OVERFLOW_ERROR;
             }
-        }
-        else
-        {
-            num1 = var1->value;
-        }
-
-        p = strtok(NULL, operations);
-        MemoryCell * var2 = search_variable(vars, p);
-        if(var2 == NULL)
-        {
-            enum errors err = convert_str_to_int(p, &num2, 10);
-            if(err == INVALID_INPUT)
+            else
             {
-                if(check_is_digit(p))
-                {
-                    return OVERFLOW_ERROR;
-                }
-                else
-                {
-                    return INVALID_INPUT;
-                }
+                return INVALID_INPUT;
             }
-        }
-        else
-        {
-            num2 = var2->value;
-        }
-
-
-        if(operation == '+')
-        {
-            if (num1 > 0 && num2 > LONG_MAX - num1) {
-                return OVERFLOW_ERROR;
-            } else if (num1 < 0 && num2 < LONG_MIN - num1) {
-                return OVERFLOW_ERROR;
-            }
-            result->value = num1 + num2;
-        }
-        else if(operation == '-')
-        {
-            if (num1 > 0 && num2 < LONG_MIN + num1) {
-                return OVERFLOW_ERROR;
-            } else if (num1 < 0 && num2 > LONG_MAX + num1) {
-                return OVERFLOW_ERROR;
-            }
-            result->value = num1 - num2;
-        }
-        else if (operation == '*')
-        {
-            if (num1 > 0 && num2 > LONG_MAX / num1) {
-                return OVERFLOW_ERROR;
-            } else if (num1 < 0 && num2 < LONG_MIN / num1) {
-                return OVERFLOW_ERROR;
-            }
-            result->value = num1 * num2;
-        }
-        else if(operation == '/')
-        {
-            if(num2 == 0)
-            {
-                return DIVISION_BY_ZERO;
-            }
-            result->value = num1 / num2;
-        }
-        else if(operation == '%')
-        {
-            if(num2 == 0)
-            {
-                return DIVISION_BY_ZERO;
-            }
-            result->value = num1 % num2;
         }
     }
     else
     {
-        long int num;
-        p = strtok(NULL, "=");
-//        printf("%s", p);
-        MemoryCell * var = search_variable(vars, p);
-
-        if(var == NULL)
-        {
-            enum errors err = convert_str_to_int(p, &num, 10);
-            if(err == INVALID_INPUT)
-            {
-                if(check_is_digit(p))
-                {
-                    return OVERFLOW_ERROR;
-                }
-                else
-                {
-                    return INVALID_INPUT;
-                }
-            }
-        }
-        else
-        {
-            num = var->value;
-        }
-        result->value = num;
+        *num = var->value;
     }
+
+    if(*flag_negative)
+    {
+        (*num) *= -1;
+        *flag_negative = 0;
+    }
+    return OK;
+}
+
+enum errors get_res(char operation, long int num1, long int num2, long int * res)
+{
+    if(operation == '+')
+    {
+        if (num1 > 0 && num2 > LONG_MAX - num1) {
+            return OVERFLOW_ERROR;
+        } else if (num1 < 0 && num2 < LONG_MIN - num1) {
+            return OVERFLOW_ERROR;
+        }
+        *res = num1 + num2;
+    }
+    else if(operation == '-')
+    {
+        if (num1 > 0 && num2 < LONG_MIN + num1) {
+            return OVERFLOW_ERROR;
+        } else if (num1 < 0 && num2 > LONG_MAX + num1) {
+            return OVERFLOW_ERROR;
+        }
+        *res = num1 - num2;
+    }
+    else if (operation == '*')
+    {
+        if (num1 > 0 && num2 > LONG_MAX / num1) {
+            return OVERFLOW_ERROR;
+        } else if (num1 < 0 && num2 < LONG_MIN / num1) {
+            return OVERFLOW_ERROR;
+        }
+        *res = num1 * num2;
+    }
+    else if(operation == '/')
+    {
+        if(num2 == 0)
+        {
+            free(buffer);
+            return DIVISION_BY_ZERO;
+        }
+        *res = num1 / num2;
+    }
+    else if(operation == '%')
+    {
+        if(num2 == 0)
+        {
+            free(buffer);
+            return DIVISION_BY_ZERO;
+        }
+        *res = num1 % num2;
+    }
+    return OK;
+}
+
+enum errors execution_instructions(char * str, Variables * vars, const char * operations)
+{
+    enum errors err;
+    int len_str = strlen(str);
+    char * buffer = (char *) malloc((len_str + 1) * sizeof(char));
+    if(buffer == NULL)
+        return INVALID_MEMORY;
+
+    int idx = 0;
+    for(;str[idx] != '='; idx++)
+    {
+        buffer[idx] = str[idx];
+    }
+    buffer[idx++] = '\0';
+
+    MemoryCell * result = search_variable(vars, buffer);
+
+    int flag_negative = 0;
+
+    if(str[idx] == '~')
+    {
+        flag_negative = 1;
+        idx++;
+    }
+
+    int i = 0;
+    while (str[idx] != '\0' && strrchr(operations, str[idx]) == NULL)
+    {
+        buffer[i++] = str[idx++];
+    }
+    buffer[i] = '\0';
+
+    long int num1;
+    MemoryCell * var1 = search_variable(vars, buffer);
+
+    err = get_num(var1, &num1, buffer, &flag_negative);
+    if(err != OK)
+    {
+        free(buffer);
+        return err;
+    }
+
+    long int res = 0;
+
+    if (str[idx] == '\0')
+    {
+        res = num1;
+    }
+    else
+    {
+
+        char operation = str[idx++];
+
+        if(str[idx] == '~')
+        {
+            flag_negative = 1;
+            idx++;
+        }
+
+        for(i = 0; str[idx] != '\0'; i++, idx++)
+        {
+            buffer[i] = str[idx];
+        }
+        buffer[i] = '\0';
+
+        long int num2;
+        MemoryCell * var2 = search_variable(vars, buffer);
+
+        err = get_num(var2, &num2, buffer, &flag_negative);
+        if(err != OK)
+        {
+            free(buffer);
+            return err;
+        }
+
+        err = get_res(operation, num1, num2, &res);
+        if(err != OK)
+        {
+            free(buffer);
+            return err;
+        }
+    }
+
+
+    if(result == NULL)
+    {
+        int j = 0;
+        for(;str[j] != '='; j++)
+        {
+            buffer[j] = str[j];
+        }
+        buffer[j] = '\0';
+
+        enum errors err = add_variable(vars, buffer, res);
+        if(err == INVALID_MEMORY)
+        {
+            free(buffer);
+            return INVALID_MEMORY;
+        }
+    }
+    else
+    {
+        result->value = res;
+    }
+
+    free(buffer);
     return OK;
 }
 
@@ -422,6 +461,15 @@ int main(int argc, char * argv[])
             printf("print var\n");
             char * p = strtok(buffer, " ");
             p = strtok(NULL, " ");
+            if(p == NULL)
+            {
+                printf("unknown variable\n");
+                destroy_variables(vars);
+                fclose(filename);
+                free(buffer);
+                return INVALID_INPUT;
+            }
+
             MemoryCell * var = search_variable(vars, p);
             if(var != NULL)
             {
