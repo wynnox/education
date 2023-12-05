@@ -269,7 +269,6 @@ enum errors get_res(char operation, long int num1, long int num2, long int * res
     {
         if(num2 == 0)
         {
-            free(buffer);
             return DIVISION_BY_ZERO;
         }
         *res = num1 / num2;
@@ -278,7 +277,6 @@ enum errors get_res(char operation, long int num1, long int num2, long int * res
     {
         if(num2 == 0)
         {
-            free(buffer);
             return DIVISION_BY_ZERO;
         }
         *res = num1 % num2;
