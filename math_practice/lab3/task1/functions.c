@@ -8,8 +8,6 @@ enum errors
     INVALID_MEMORY,
 };
 
-char* sc = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
 int sum(int num1, int num2)
 {
     int res = 0, carry = 0;
@@ -35,7 +33,7 @@ int subtraction(int a, int b)
     return sum(a, negative(b));
 }
 
-enum errors ten_into_n(int num, int r, char** res, int * capacity, int * count) {
+enum errors ten_into_n(long int num, int r, char** res, int * capacity, int * count, char * base) {
     *count = 0;
     int mask, digit;
 
@@ -53,7 +51,7 @@ enum errors ten_into_n(int num, int r, char** res, int * capacity, int * count) 
 
         mask = subtraction((1 << r), 1);
         digit = num & mask;
-        (*res)[*count] = sc[digit];
+        (*res)[*count] = base[digit];
         *count = sum(*count, 1);
 
         num >>= r;
@@ -75,6 +73,7 @@ void print_num(int flag, char * res, int count)
 }
 
 int main() {
+    char* base = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     int capacity = 1;
     char* result = (char*)malloc(sizeof(char) * capacity);
     if (result == NULL)
@@ -83,12 +82,12 @@ int main() {
         return INVALID_MEMORY;
     }
 
-    int num;
+    long int num;
     int r;
     int count;
 
     printf("Enter decimal number and base (separated by space): ");
-    if (scanf("%d%d", &num, &r) != 2 || r < 1 || r > 5)
+    if (scanf("%ld%d", &num, &r) != 2 || r < 1 || r > 5)
     {
         printf("Error");
         free(result);
@@ -102,7 +101,7 @@ int main() {
         flag_negative = 1;
     }
 
-    if(ten_into_n(num, r, &result, &capacity, &count) != OK)
+    if(ten_into_n(num, r, &result, &capacity, &count, base) != OK)
     {
         printf("Error");
         free(result);
