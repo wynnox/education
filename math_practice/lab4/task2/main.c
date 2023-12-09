@@ -185,6 +185,13 @@ enum errors rand_arr(Array **a, char name, int count, int lb, int rb)
         }
     }
 
+    if(lb > rb)
+    {
+        int tmp = lb;
+        lb = rb;
+        rb = tmp;
+    }
+
     int * nums = (int *) malloc(count * sizeof(int));
     if(nums == NULL)
     {
@@ -284,6 +291,13 @@ enum errors copy_arr(Array **a, int lb, int rb, Array ** b)
         return INVALID_MEMORY;
     }
 
+    if(lb > rb)
+    {
+        int tmp = lb;
+        lb = rb;
+        rb = tmp;
+    }
+
     int idx = 0;
     for(int i = 0; i < (*a)->size; ++i)
     {
@@ -313,6 +327,13 @@ void print_all(Array *a)
 
 void print_b(Array * a, int lb, int rb)
 {
+    if(lb > rb)
+    {
+        int tmp = lb;
+        lb = rb;
+        rb = tmp;
+    }
+
     for(int i = 0; i < (a)->size; ++i)
     {
         if(i >= lb && i <= rb)
