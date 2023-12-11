@@ -3,9 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <limits.h>
-#include <errno.h>
 #include <time.h>
-#include <math.h>
 
 #define SIZE_CAPACITY 20
 #define SIZE_ARRAY 26
@@ -55,28 +53,6 @@ enum errors read_command(FILE * input, char ** str, int * capacity)
     return OK;
 }
 
-enum errors convert_str_to_int (const char *str, int * result, int base)
-{
-    char *endptr;
-    long num = strtol(str, &endptr, base);
-
-    if ((errno == ERANGE && (num == LONG_MAX || num == LONG_MIN)) || (num > INT_MAX || num < INT_MIN))
-    {
-            return INVALID_INPUT;
-    }
-    else if (errno != 0 && num == 0)
-    {
-        return INVALID_INPUT;
-    }
-    else if (*endptr != '\0')
-    {
-        return INVALID_INPUT;
-    }
-
-    *result = (int) num;
-    return OK;
-}
-
 void destroy_arrays(Array ** array)
 {
     for (int i = 0; i < SIZE_ARRAY; ++i)
@@ -101,7 +77,7 @@ Array * create_array(char name)
     a->size = 0;
     a->name = name;
     a->capacity = SIZE_CAPACITY;
-    a->data = (int *) calloc(sizeof(int), SIZE_CAPACITY);
+    a->data = (int *) malloc(sizeof(int) * SIZE_CAPACITY);
     if(a->data == NULL)
     {
         free(a);
@@ -192,24 +168,19 @@ enum errors rand_arr(Array **a, char name, int count, int lb, int rb)
         rb = tmp;
     }
 
-    int * nums = (int *) malloc(count * sizeof(int));
-    if(nums == NULL)
-    {
-        return INVALID_MEMORY;
-    }
-
-    int idx = 0;
     for(int i = 0; i < count; ++i)
     {
-        nums[idx++] = lb + rand() % (rb - lb + 1);
+        if ((*a)->size == (*a)->capacity)
+        {
+            (*a)->capacity *= 2;
+            int *for_realloc = (int *)realloc((*a)->data, (*a)->capacity * sizeof(int));
+            if (for_realloc == NULL)
+                return INVALID_MEMORY;
+            (*a)->data = for_realloc;
+        }
+
+        (*a)->data[(*a)->size++] = lb + rand() % (rb - lb + 1);
     }
-
-    free((*a)->data);
-
-    (*a)->data = nums;
-
-    (*a)->capacity = count;
-    (*a)->size = idx;
 
     return OK;
 }
@@ -504,7 +475,7 @@ int main(int argc, char * argv[])
         else if(strstr(command, "Concat"))
         {
             char array_nameA, array_nameB;
-            int k = sscanf(command, "Concat %c, %c", &array_nameA, &array_nameB);
+            sscanf(command, "Concat %c, %c", &array_nameA, &array_nameB);
 
             array_nameA = toupper(array_nameA);
             array_nameB = toupper(array_nameB);
@@ -549,8 +520,6 @@ int main(int argc, char * argv[])
                 printf("\n");
             }
 #endif
-
-
         }
         else if(strstr(command, "Free"))
         {
@@ -559,7 +528,6 @@ int main(int argc, char * argv[])
             array_name = toupper(array_name);
 
             array[array_name - 'A']->size = 0;
-            //free не стала делать
         }
         else if(strstr(command, "Remove"))
         {
@@ -722,7 +690,7 @@ int main(int argc, char * argv[])
         else if(strstr(command, "Stats"))
         {
             char array_name;
-            sscanf(command, "Shuffle %c", &array_name);
+            sscanf(command, "Stats %c", &array_name);
 
             array_name = toupper(array_name);
 
