@@ -7,6 +7,7 @@
 
 #define SIZE_CAPACITY 20
 #define SIZE_ARRAY 26
+#define EPSILON 1e-6
 
 enum errors
 {
@@ -66,56 +67,48 @@ void destroy_arrays(Array ** array)
     free(array);
 }
 
-
-Array * create_array(char name)
+enum errors load(FILE * input, Array ** a)
 {
-    Array * a = (Array *)malloc(sizeof(Array));
-
-    if(a == NULL)
-        return NULL;
-
-    a->size = 0;
-    a->name = name;
-    a->capacity = SIZE_CAPACITY;
-    a->data = (int *) malloc(sizeof(int) * SIZE_CAPACITY);
-    if(a->data == NULL)
+    if (*a == NULL)
     {
-        free(a);
-        return NULL;
-    }
-
-    return a;
-}
-
-enum errors load(FILE * input, Array ** array, char name)
-{
-    Array * arr = (*array);
-    if (arr == NULL)
-    {
-        (*array) = create_array(name);
-        arr = (*array);
-        if (arr == NULL)
+        (*a) = (Array *)malloc(sizeof(Array));
+        (*a)->data = NULL;
+        if ((*a) == NULL)
         {
             return INVALID_MEMORY;
         }
     }
 
     int value;
+    int size = 0;
+    int capacity = SIZE_CAPACITY;
+    int * nums = (int *) malloc(capacity * sizeof(int));
+    if(nums == NULL)
+    {
+        return INVALID_MEMORY;
+    }
+
     while (fscanf(input, "%d", &value) == 1)
     {
-        if (arr->size == arr->capacity)
+        if (size == capacity)
         {
-            arr->capacity *= 2;
-            int *for_realloc = (int *)realloc(arr->data, arr->capacity * sizeof(int));
+            capacity *= 2;
+            int *for_realloc = (int *)realloc(nums, capacity * sizeof(int));
             if (for_realloc == NULL)
                 return INVALID_MEMORY;
-            arr->data = for_realloc;
+            nums = for_realloc;
         }
-
-        arr->data[arr->size++] = value;
+        nums[size++] = value;
     }
 
     if(!feof(input)) return INVALID_INPUT;
+
+    if((*a)->data != NULL)
+        free((*a)->data);
+
+    (*a)->data = nums;
+    (*a)->capacity = capacity;
+    (*a)->size = size;
 
     return OK;
 }
@@ -154,7 +147,8 @@ enum errors rand_arr(Array **a, char name, int count, int lb, int rb)
 {
     if (*a == NULL)
     {
-        *a = create_array(name);
+        *a = (Array *)malloc(sizeof(Array));
+        (*a)->data = NULL;
         if (*a == NULL)
         {
             return INVALID_MEMORY;
@@ -168,19 +162,23 @@ enum errors rand_arr(Array **a, char name, int count, int lb, int rb)
         rb = tmp;
     }
 
+    int * nums = (int *) malloc(count * sizeof(int));
+    if(nums == NULL)
+    {
+        return INVALID_MEMORY;
+    }
+
+    int idx = 0;
     for(int i = 0; i < count; ++i)
     {
-        if ((*a)->size == (*a)->capacity)
-        {
-            (*a)->capacity *= 2;
-            int *for_realloc = (int *)realloc((*a)->data, (*a)->capacity * sizeof(int));
-            if (for_realloc == NULL)
-                return INVALID_MEMORY;
-            (*a)->data = for_realloc;
-        }
-
-        (*a)->data[(*a)->size++] = lb + rand() % (rb - lb + 1);
+        nums[idx++] = lb + rand() % (rb - lb + 1);
     }
+
+    if((*a)->data != NULL)
+        free((*a)->data);
+    (*a)->data = nums;
+    (*a)->capacity = count;
+    (*a)->size = idx;
 
     return OK;
 }
@@ -379,6 +377,9 @@ int main(int argc, char * argv[])
 
             array_name = toupper(array_name);
 
+            int idx = array_name - 'A';
+            Array * arr = array[idx];
+
             FILE * in = fopen(buffer, "r");
             if(in == NULL)
             {
@@ -389,7 +390,7 @@ int main(int argc, char * argv[])
                 return ERROR_OPEN_FILE;
             }
 
-            err = load(in, &array[array_name - 'A'], array_name);
+            err = load(in, &arr);
 
             if(err != OK)
             {
@@ -407,14 +408,13 @@ int main(int argc, char * argv[])
             fclose(in);
 
 #ifdef DEBUG
-            Array * arr = array[array_name - 'A'];
             for(int i = 0; i < arr->size; ++i)
             {
                 printf("%d ", arr->data[i]);
             }
             printf("\n");
 #endif
-
+            array[idx] = arr;
         }
         else if(strstr(command, "Save"))
         {
@@ -471,6 +471,8 @@ int main(int argc, char * argv[])
             }
             printf("\n");
 #endif
+
+            array[idx] = arr;
         }
         else if(strstr(command, "Concat"))
         {
@@ -520,6 +522,7 @@ int main(int argc, char * argv[])
                 printf("\n");
             }
 #endif
+            array[idxA] = arrA;
         }
         else if(strstr(command, "Free"))
         {
@@ -563,6 +566,7 @@ int main(int argc, char * argv[])
             }
             printf("\n%d\n", arr->size);
 #endif
+            array[idx] = arr;
 
         }
         else if(strstr(command, "Copy"))
@@ -614,6 +618,7 @@ int main(int argc, char * argv[])
                 printf("\n");
             }
 #endif
+            array[idxA] = arrA;
         }
         else if(strstr(command, "Sort"))
         {
@@ -765,6 +770,12 @@ int main(int argc, char * argv[])
                 int idx = array_name - 'A';
                 Array * arr = array[idx];
 
+                if(arr == NULL)
+                {
+                    printf("error: №%d '%s' (empty array)\n",count_line, command);
+                    continue;
+                }
+
                 print_all(arr);
             }
             else
@@ -774,6 +785,12 @@ int main(int argc, char * argv[])
                 array_name = toupper(array_name);
                 int idx = array_name - 'A';
                 Array * arr = array[idx];
+                if(arr == NULL)
+                {
+                    printf("error: №%d '%s' (empty array)\n",count_line, command);
+                    continue;
+                }
+
                 if(k == 2)
                 {
                     if(arr->size > lb && lb >= 0)
