@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 
 #define EPSILON 1e-6
 
@@ -53,7 +54,12 @@ enum errors read_from_file(FILE *input, Student **array, int *size, int *capacit
             return INVALID_INPUT;
         }
 
-        //чекнуть есть ли айдишка уже
+        int check = (*array)[*size].id;
+
+        for(int i = 0; i < (*size); ++i)
+        {
+            if((*array)[i].id == check) return INVALID_INPUT;
+        }
 
         if (check_valid((*array)[*size].name, strlen((*array)[*size].name)) != OK)
         {
@@ -152,29 +158,27 @@ int compare_score(const void *a, const void *b)
 {
     const Student *emp_a = (const Student *)a;
     const Student *emp_b = (const Student *)b;
-
-
-    if (emp_b->average_score - emp_a->average_score > EPSILON)
+    if (fabs(emp_b->average_score - emp_a->average_score) < EPSILON)
+    {
+        return 0;
+    }
+    else if (emp_b->average_score > emp_a->average_score)
     {
         return 1;
     }
-    if (emp_a->average_score - emp_b->average_score > EPSILON)
-    {
-        return -1;
-    }
-
-    return 0;
+    return -1;
 }
 
 void menu()
 {
     printf("Menu:\n"
+           "line limit - 50 characters\n"
            "1. Search by id\n"
            "2. Search by first name\n"
            "3. Search by last name\n"
            "4. Search by group\n"
-           "5. outputting student information to a file (id)\n"
-           "6. output to a file information about a student whose average score is higher than the rest\n"
+           "5. outputting student information to a file (id) (filename from command line)\n"
+           "6. output to a file information about a student whose average score is higher than the rest(filename from command line arguments)\n"
            "7. Exit\n");
 }
 
@@ -193,11 +197,12 @@ int main(int argc, char * argv[])
         return ERROR_OPEN_FILE;
     }
 
+
     Student *input_array = NULL;
     int size = 0, capacity_array = 2;
     if(read_from_file(input, &input_array, &size, &capacity_array) != OK)
     {
-        printf("error\n");
+        printf("error input\n");
         fclose(input);
         free(input_array);
         return INVALID_INPUT;
@@ -209,44 +214,51 @@ int main(int argc, char * argv[])
 
     menu();
 
-    int choice;
+    char choice;
     int flag = 1;
     while (flag)
     {
         printf("your choice:");
-        int err = scanf("%d", &choice);
+        char c;
+        int err = scanf("%c%c", &choice, &c);
+        if(c != '\n') while ((c = getchar()) != '\n' && c != EOF);
         if(err == EOF)
         {
             flag = 0;
             continue;
         }
-        if(err != 1) continue;
+        if(err != 2)
+        {
+            continue;
+        }
         switch (choice)
         {
-            case 1:
+            case '1':
                 qsort(input_array, size, sizeof(Student), compare_id);
                 printf("array sorted by id\n");
                 print_array(input_array, size);
                 break;
-            case 2:
+            case '2':
                 qsort(input_array, size, sizeof(Student), compare_name);
                 printf("array sorted by name\n");
                 print_array(input_array, size);
                 break;
-            case 3:
+            case '3':
                 qsort(input_array, size, sizeof(Student), compare_surname);
                 printf("array sorted by surname\n");
                 print_array(input_array, size);
                 break;
-            case 4:
+            case '4':
                 qsort(input_array, size, sizeof(Student), compare_group);
                 printf("array sorted by group\n");
                 print_array(input_array, size);
                 break;
-            case 5:
+            case '5':
                 printf("enter student id: ");
                 int search_id;
-                if(!scanf("%d", &search_id)) break;
+                int errr = scanf("%d", &search_id);
+                while ((c = getchar()) != '\n' && c != EOF);
+                if(errr != 1) break;
 
                 Student st;
                 int i = 0;
@@ -276,20 +288,22 @@ int main(int argc, char * argv[])
                 }
 
                 st = input_array[i];
-                fprintf(cho, "%s %s %s %lf\n", st.name, st.surname, st.group, st.average_score);
+                fprintf(cho, "%d %s %s %s %lf\n", st.id, st.name, st.surname, st.group, st.average_score);
 
                 printf("file entry has been made\n");
 
                 fclose(cho);
 
                 break;
-            case 6:
+            case '6':
                 qsort(input_array, size, sizeof(Student), compare_score);
                 print_array(input_array, size);
 
                 char buff[50];
                 printf("enter file name: ");
-                if(!scanf("%49s", buff))
+                int err = scanf("%49s", buff);
+                while ((c = getchar()) != '\n' && c != EOF);
+                if(err != 1)
                 {
                     printf("error\n");
                 }
@@ -313,13 +327,13 @@ int main(int argc, char * argv[])
                 {
                     Student st2 = input_array[i];
                     if(st1.average_score - st2.average_score > EPSILON) break;
-                    fprintf(lol, "%s %s\n", st2.name, st2.surname);
+                    fprintf(lol, "%d %s %s %s %c %c %c %c %c\n", st2.id, st2.name, st2.surname, st2.group, st2.marks[0], st2.marks[1], st2.marks[2], st2.marks[3], st2.marks[4]);
                 }
 
                 printf("file entry has been made\n");
                 fclose(lol);
                 break;
-            case 7:
+            case '7':
                 free(input_array);
                 return 0;
             default:
