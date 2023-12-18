@@ -730,27 +730,26 @@ int main(int argc, char * argv[])
 
             average /= len;
 
-            qsort(arr->data, arr->size, sizeof(int), compare_a);
-
-            int count = 1;
-            int max_count = 0;
-
-            int k;
-            for(int i = 1; i < len; ++i)
+            int *counts = calloc(len, sizeof(int));
+            if(counts == NULL)
             {
-                if(arr->data[i] == arr->data[i - 1])
+                printf("memory allocation error\n");
+                return INVALID_MEMORY;
+            }
+
+            int max_count = 0, k = arr->data[0];
+            for(int i = 0; i < len; ++i)
+            {
+                counts[arr->data[i]]++;
+                if(counts[arr->data[i]] > max_count ||
+                   (counts[arr->data[i]] == max_count && arr->data[i] > k))
                 {
-                    count++;
-                }
-                else
-                {
-                    if(count > max_count)
-                    {
-                        k = arr->data[i - 1];
-                    }
-                    count = 0;
+                    max_count = counts[arr->data[i]];
+                    k = arr->data[i];
                 }
             }
+
+            free(counts);
 
             printf("size = %d\n", len);
             printf("min = %d (%d), max = %d (%d)\n", min, min_i, max, max_i);
