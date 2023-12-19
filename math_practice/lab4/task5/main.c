@@ -16,7 +16,10 @@ enum errors
     DIVISION_BY_ZERO,
     EMPTY_LINE,
     EMPTY_BRACKET,
-    INVALID_BRACKET
+    INVALID_BRACKET,
+    NEGATIVE_MOD,
+    NEGATIVE_POWER,
+    UNUSED_DIGITS_OR_OPERATORS
 };
 
 typedef struct Stack_char
@@ -154,12 +157,26 @@ int precedence(char c)
     }
 }
 
+long long int binary_pow(long long int base, int power) {
+    if (power == 0) {
+        return 1;
+    }
+    if (power % 2 == 1) {
+        return binary_pow(base, power - 1) * base;
+    }
+    else {
+        int tmp = binary_pow(base, power / 2);
+        return tmp * tmp;
+    }
+}
+
 enum errors infix_to_postfix(const char *infix, char **postfix)
 {
     Stack_char *Stack_char = NULL;
     int idx = 0;
 
     char c;
+    char temp;
     int len = strlen(infix);
     for (int i = 0; i < len; ++i)
     {
@@ -185,11 +202,11 @@ enum errors infix_to_postfix(const char *infix, char **postfix)
             {
                 (*postfix)[idx++] = Stack_char->value;
                 (*postfix)[idx++] = ' ';
-                Stack_char_pop(&Stack_char, &c);
+                Stack_char_pop(&Stack_char, &temp);
             }
 
             if (Stack_char != NULL && Stack_char->value == '(')
-                Stack_char_pop(&Stack_char, &c);
+                Stack_char_pop(&Stack_char, &temp);
             else
                 return INVALID_BRACKET;
         }
@@ -199,7 +216,7 @@ enum errors infix_to_postfix(const char *infix, char **postfix)
             {
                 (*postfix)[idx++] = Stack_char->value;
                 (*postfix)[idx++] = ' ';
-                Stack_char_pop(&Stack_char, &c);
+                Stack_char_pop(&Stack_char, &temp);
             }
             Stack_char_push(&Stack_char, c);
         }
@@ -213,13 +230,13 @@ enum errors infix_to_postfix(const char *infix, char **postfix)
     {
         (*postfix)[idx++] = Stack_char->value;
         (*postfix)[idx++] = ' ';
-        Stack_char_pop(&Stack_char, &c);
+        Stack_char_pop(&Stack_char, &temp);
     }
 
     if (Stack_char != NULL)
     {
         while(Stack_char != NULL)
-            Stack_char_pop(&Stack_char, &c);
+            Stack_char_pop(&Stack_char, &temp);
         return INVALID_BRACKET;
     }
 
@@ -243,8 +260,9 @@ enum errors calculation(const char *postfix, long long *result)
     int idx_buff = 0;
     int is_num = 0;
     long long int num = 0;
+    int first = 1;
 
-    for (int i = 0; i < len; ++i)
+    for (int i = 0; i <= len; ++i)
     {
         char c = postfix[i];
 
@@ -257,9 +275,16 @@ enum errors calculation(const char *postfix, long long *result)
         {
             buff[idx_buff] = '\0';
             convert_str_to_long_long(buff, &num, 10);
+            if(c == '\0' && first)
+            {
+                *result = num;
+                free(buff);
+                return OK;
+            }
             Stack_number_push(&st_num, num);
             idx_buff = 0;
             is_num = 0;
+            first = 0;
         }
         else if (c == ' ')
         {
@@ -269,8 +294,7 @@ enum errors calculation(const char *postfix, long long *result)
         {
             long long first_value, second_value;
 
-            // Pop operands from the stack
-            if (popStack(&st_num, &first_value) == INVALID_PARAMETER)
+            if (Stack_number_pop(&st_num, &first_value) == INVALID_INPUT)
             {
                 free(buff);
                 Stack_number_free(st_num);
@@ -283,7 +307,7 @@ enum errors calculation(const char *postfix, long long *result)
             }
             else
             {
-                if (popStack(&st_num, &second_value) == INVALID_PARAMETER)
+                if (Stack_number_pop(&st_num, &second_value) == INVALID_INPUT)
                 {
                     free(buff);
                     Stack_number_free(st_num);
@@ -306,7 +330,7 @@ enum errors calculation(const char *postfix, long long *result)
                         {
                             free(buff);
                             Stack_number_free(st_num);
-                            return DIVIDE_BY_ZERO;
+                            return DIVISION_BY_ZERO;
                         }
                         num = second_value / first_value;
                         break;
@@ -315,7 +339,7 @@ enum errors calculation(const char *postfix, long long *result)
                         {
                             free(buff);
                             Stack_number_free(st_num);
-                            return DIVIDE_BY_ZERO;
+                            return DIVISION_BY_ZERO;
                         }
                         if (first_value < 0 || second_value < 0)
                         {
@@ -343,7 +367,7 @@ enum errors calculation(const char *postfix, long long *result)
                     default:
                         free(buff);
                         Stack_number_free(st_num);
-                        return INVALID_PARAMETER;
+                        return INVALID_INPUT;
                 }
             }
             if (Stack_number_push(&st_num, num) == INVALID_MEMORY)
@@ -355,7 +379,7 @@ enum errors calculation(const char *postfix, long long *result)
         }
     }
 
-    if (popStack(&st_num, result) == INVALID_PARAMETER)
+    if (Stack_number_pop(&st_num, result) == INVALID_INPUT)
     {
         free(buff);
         Stack_number_free(st_num);
@@ -415,17 +439,29 @@ void print_error(FILE * output, enum errors err, int count_line)
 {
     switch (err)
     {
+        case INVALID_INPUT:
+            fprintf(output, "№%d: invalid operand\n", count_line);
+            break;
+        case DIVISION_BY_ZERO:
+            fprintf(output, "№%d: division by zero\n", count_line);
+            break;
         case EMPTY_LINE:
             fprintf(output, "№%d: empty line\n", count_line);
             break;
         case EMPTY_BRACKET:
             fprintf(output, "№%d: empty bracket\n", count_line);
             break;
-        case INVALID_INPUT:
-            fprintf(output, "№%d: invalid operand\n", count_line);
-            break;
         case INVALID_BRACKET:
             fprintf(output, "№%d: invalid bracket\n", count_line);
+            break;
+        case NEGATIVE_MOD:
+            fprintf(output, "№%d: negative mod\n", count_line);
+            break;
+        case NEGATIVE_POWER:
+            fprintf(output, "№%d: negative power\n", count_line);
+            break;
+        case UNUSED_DIGITS_OR_OPERATORS:
+            fprintf(output, "№%d: unused operand or operation\n", count_line);
             break;
         default:
             fprintf(output, "№%d: ????\n", count_line);
@@ -537,9 +573,30 @@ int main(int argc, char * argv[])
                 continue;
             }
 
-            //вычислем значение
+            long long int result = 0;
+            err = calculation(postfix, &result);
+            if(err != OK)
+            {
+                if (err_output == NULL)
+                {
+                    err_output = fopen(err_filename, "w");
+                    if(err_output == NULL)
+                    {
+                        printf("Error opening file %s\n", err_filename);
+                        fclose(input);
+                        free(infix);
+                        free(postfix);
+                        free(err_filename);
+                        return ERROR_OPEN_FILE;
+                    }
+                }
+                print_error(err_output, err, count_line);
+                ++count_line;
+                free(postfix);
+                continue;
+            }
 
-            printf("№%d '%s' | '%s'\n", count_line, infix, postfix);
+            printf("№%d '%s' | '%s' | =%lld\n", count_line, infix, postfix, result);
             count_line++;
 
             free(postfix);
