@@ -28,7 +28,6 @@ int is_finite_representation(double number, int base)
 {
     int denominator = base;
 
-    // избавляемся от дробной части и переводим в нужную сс
     while (fabs(number - floor(number)) > EPSILON)
     {
         number *= base;

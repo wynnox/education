@@ -77,7 +77,7 @@ int main()
     double *result;
     enum errors err;
 
-    err = calculate_polynomial(1.0, &result, 3.0, 2.0, -3.0, 4.0, 1.0);
+    err = calculate_polynomial(0, &result, 3, 2.0, -3.0, 4.0, 1.0);
     if (err == OK)
     {
         for (int i = 0; i < 4; ++i)
