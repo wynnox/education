@@ -14,49 +14,73 @@ enum errors
 
 int gcd(int a, int b)
 {
-    if (b == 0)
+    while (a > 0 && b > 0)
     {
-        return a;
+        if (a > b)
+        {
+            a = a % b;
+        }
+        else
+        {
+            b = b % a;
+        }
     }
-    else
+    if (a == 0)
     {
-        return gcd(b, a % b);
+        return b;
     }
+    return a;
 }
 
 int is_finite_representation(double number, int base)
 {
-    int denominator = base;
+    int denominator = 1;
 
     while (fabs(number - floor(number)) > EPSILON)
     {
-        number *= base;
-        denominator *= base;
+        number *= 10;
+        denominator *= 10;
     }
 
 #ifdef DEBUG
     printf("%lf\n", number);
 #endif
 
-    int gcd_ = gcd(denominator, base);
-    while (gcd_ != 1)
+    int gcd_ = gcd(number, denominator);
+    if(gcd_ != 1)
     {
-        if (denominator % gcd_ == 0)
-        {
-            denominator /= gcd_;
-        }
-        else
+        denominator /= gcd_;
+    }
+
+    int i = 2;
+    if(denominator % i == 0 && base % i != 0)
+    {
+        return 0;
+    }
+    while(denominator % i == 0)
+        denominator /= i;
+
+    for(int i = 3; i <= sqrt(denominator); i+=2)
+    {
+        if(denominator % i == 0 && base % i != 0)
         {
             return 0;
         }
-        gcd_ = gcd(denominator, base);
+        while(denominator % i == 0)
+            denominator /= i;
     }
+
 
     return 1;
 }
 
 enum errors check_finite_representation(double **res, int base, int *idx, int count, ...)
 {
+    if (base < 2)
+    {
+        return INVALID_INPUT;
+    }
+
     va_list args;
     va_start(args, count);
 
@@ -99,84 +123,16 @@ int main()
     double *res = NULL;
     int count = 0;
 
-    // Тест 1: числа, которые имеют конечное представление в системе счисления с основанием 2
-    if (check_finite_representation(&res, 2, &count ,3, 0.5, 0.25, 0.375) != OK)
+    enum errors err = check_finite_representation(&res, 10, &count ,3, 0.1, 0.25, 0.375);
+    if (err == INVALID_MEMORY)
     {
         printf("memory allocation error\n");
         return INVALID_MEMORY;
     }
-
-    if (count == 0)
+    else if(err == INVALID_INPUT)
     {
-        printf("No numbers have finite representation\n");
-    }
-    else
-    {
-        for (int i = 0; i < count; i++)
-        {
-            printf("%lf has finite representation\n", res[i]);
-        }
-
-        free(res);
-    }
-    printf("\n");
-
-    // Тест 2: числа, которые не имеют конечного представления в системе счисления с основанием 2
-    res = NULL;
-    count = 0;
-    if (check_finite_representation(&res, 2, &count ,2, 0.3333, 0.6666) != OK)
-    {
-        printf("memory allocation error\n");
-        return INVALID_MEMORY;
-    }
-
-    if (count == 0)
-    {
-        printf("No numbers have finite representation\n");
-    }
-    else
-    {
-        for (int i = 0; i < count; i++)
-        {
-            printf("%lf has finite representation\n", res[i]);
-        }
-
-        free(res);
-    }
-    printf("\n");
-
-
-    // Тест 3: числа, которые имеют конечное представление в системе счисления с основанием 3
-    res = NULL;
-    count = 0;
-    if (check_finite_representation(&res, 3, &count ,3, 0.5, 0.25, 0.375) != OK)
-    {
-        printf("memory allocation error\n");
-        return INVALID_MEMORY;
-    }
-
-    if (count == 0)
-    {
-        printf("No numbers have finite representation\n");
-    }
-    else
-    {
-        for (int i = 0; i < count; i++)
-        {
-            printf("%lf has finite representation\n", res[i]);
-        }
-
-        free(res);
-    }
-    printf("\n");
-
-    // Тест 4: числа, которые не имеют конечного представления в системе счисления с основанием 3
-    res = NULL;
-    count = 0;
-    if (check_finite_representation(&res, 2, &count ,2, 0.3333333333333333, 0.6666666666666666) != OK)
-    {
-        printf("memory allocation error\n");
-        return INVALID_MEMORY;
+        printf("invalid base\n");
+        return INVALID_INPUT;
     }
 
     if (count == 0)
