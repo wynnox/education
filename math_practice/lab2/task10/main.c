@@ -10,23 +10,16 @@ enum errors
 };
 
 //Функция для вычисления значения полинома в точке argument с заданными коэффициентами coefs и степенью power
-double evaluate_polynomial(double argument, double *coefs, double power)
+double evaluate_polynomial(double argument, double *coefs, int max_power)
 {
     double result = 0;
     double current_power = 1;
-    for (int i = 0; i <= power; i++)
+    for (int i = 0; i <= max_power; i++)
     {
         result += current_power * coefs[i];
         current_power *= argument;
     }
     return result;
-}
-
-//Функция для вычисления производной полинома с коэффициентами coefs и степенью power по переменной x
-void compute_polynomial_derivative(double *coefs, double power, int iteration)
-{
-    for (int i = 0; i <= power; i++)
-        coefs[i] *= i - iteration;
 }
 
 enum errors calculate_polynomial(double a, double **coefficients, int degree, ...)
@@ -57,15 +50,22 @@ enum errors calculate_polynomial(double a, double **coefficients, int degree, ..
     va_end(args);
 
     double multiply = 1.0;
+    int curr_power = degree;
     for (int i = 0; i <= n; i++)
     {
-        (*coefficients)[i] = evaluate_polynomial(a, start_coefficients, n);
+        (*coefficients)[i] = evaluate_polynomial(a, start_coefficients, curr_power);
         if (i > 1)
         {
             multiply *= i;
             (*coefficients)[i] /= multiply;
         }
-        compute_polynomial_derivative(start_coefficients, n, i);
+
+        curr_power--;
+        for(int j = 0; j <= curr_power; ++j)
+        {
+            double b = start_coefficients[j + 1];
+            start_coefficients[j] = b * (j + 1);
+        }
     }
 
     free(start_coefficients);
@@ -77,10 +77,10 @@ int main()
     double *result;
     enum errors err;
 
-    err = calculate_polynomial(0, &result, 3, 2.0, -3.0, 4.0, 1.0);
+    err = calculate_polynomial(3.0, &result, 4, -2.0, 1.0, -3.0, 0.0, 1.0);
     if (err == OK)
     {
-        for (int i = 0; i < 4; ++i)
+        for (int i = 0; i <= 4; ++i)
         {
             printf("%lf ", result[i]);
         }
