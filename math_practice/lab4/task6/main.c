@@ -22,11 +22,24 @@ enum errors
     UNUSED_DIGITS_OR_OPERATORS
 };
 
+typedef struct Node {
+    char value;
+    struct Node *left;
+    struct Node *right;
+} Node;
+
 typedef struct Stack_char
 {
     char value;
     struct Stack_char * next;
 } Stack_char;
+
+typedef struct Stack_node
+{
+    Node* value;
+    struct Stack_node * next;
+} Stack_node;
+
 
 enum errors Stack_char_push(Stack_char ** head, char data)
 {
@@ -66,6 +79,35 @@ void Stack_char_free(Stack_char * head)
         head = head->next;
         free(tmp);
     }
+}
+
+enum errors Stack_node_push(Stack_node ** head, Node* data)
+{
+    Stack_node * tmp = (Stack_node*) malloc(sizeof(Stack_node));
+    if(tmp == NULL)
+    {
+        return INVALID_MEMORY;
+    }
+    tmp->value = data;
+    tmp->next = *head;
+    *head = tmp;
+    return OK;
+}
+
+enum errors Stack_node_pop(Stack_node ** head, Node** num)
+{
+    Stack_node* prev = NULL;
+    if (head == NULL || *head == NULL)
+    {
+        return INVALID_INPUT;
+    }
+
+    prev = (*head);
+    *num = prev->value;
+    (*head) = (*head)->next;
+
+    free(prev);
+    return OK;
 }
 
 int is_operator(const char symbol)
@@ -230,6 +272,73 @@ void print_error(FILE * output, enum errors err, int count_line)
     }
 }
 
+Node* create_node(char value)
+{
+    Node* node = (Node*) malloc(sizeof(Node));
+    if(node == NULL) return NULL;
+    node->value = value;
+    node->left = NULL;
+    node->right = NULL;
+    return node;
+}
+
+Node* build_tree(const char* postfix)
+{
+    Stack_node* stack = NULL;
+    for (int i = 0; postfix[i] != '\0'; i++)
+    {
+        if (isdigit(postfix[i]) || isalpha(postfix[i]))
+        {
+            Node* node = create_node(postfix[i]);
+            Stack_node_push(&stack, node);
+        }
+        else if (is_operator(postfix[i]))
+        {
+            Node* node = create_node(postfix[i]);
+
+            Node* right = NULL;
+            Stack_node_pop(&stack, &right);
+            node->right = right;
+
+            Node* left = NULL;
+            Stack_node_pop(&stack, &left);
+            node->left = left;
+
+            Stack_node_push(&stack, node);
+        }
+    }
+
+    Node * node;
+    Stack_node_pop(&stack, &node);
+
+
+    return node;
+}
+
+void inorder(Node* root, int depth)
+{
+    if (root == NULL)
+    {
+        return;
+    }
+    inorder(root->left, depth + 1);
+    for (int i = 0; i < depth * 3; i++) {
+        printf(" ");
+    }
+    printf("\\_%c\n", root->value);
+    inorder(root->right, depth + 1);
+}
+
+Node * delete_tree(Node* root) {
+    if (root)
+    {
+        delete_tree(root->left);
+        delete_tree(root->right);
+        free(root);
+    }
+    return NULL;
+}
+
 int main(int argc, char * argv[])
 {
     if(argc == 1)
@@ -290,7 +399,13 @@ int main(int argc, char * argv[])
             continue;
         }
 
-        printf("%s %s", infix, postfix);
+        printf("%s %s\n", infix, postfix);
+
+        Node * root = build_tree(postfix);
+
+        inorder(root, 0);
+
+
         free(postfix);
     }
 
