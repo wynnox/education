@@ -1,11 +1,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <errno.h>
-#include <limits.h>
 #include <ctype.h>
 #include <time.h>
 #include <stdbool.h>
+#include <math.h>
 
 
 #define SIZE 20
@@ -560,7 +559,7 @@ int main(int argc, char * argv[])
             fprintf(stream_output, "\t%c\t|", operand[i]);
         }
         fprintf(stream_output, "\t%s\n", infix);
-        for(int i = 0; i <= (count_operand + 1); ++i)
+        for(int i = 0; i < pow(2, count_operand); ++i)
         {
             for(int j = 0; j < (count_operand); ++j)
             {
