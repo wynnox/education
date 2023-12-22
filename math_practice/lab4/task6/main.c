@@ -3,9 +3,14 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <limits.h>
-#include "ctype.h"
+#include <ctype.h>
+#include <time.h>
+#include <stdbool.h>
+
 
 #define SIZE 20
+#define SIZE_OUTPUT 10
+#define SIZE_OPERAND 26
 
 enum errors
 {
@@ -39,7 +44,6 @@ typedef struct Stack_node
     Node* value;
     struct Stack_node * next;
 } Stack_node;
-
 
 enum errors Stack_char_push(Stack_char ** head, char data)
 {
@@ -151,8 +155,13 @@ enum errors infix_to_postfix(const char *infix, char **postfix)
     {
         c = infix[i];
 
-        if (isdigit(c) || isalpha(c))
+        if (isdigit(c))
         {
+            (*postfix)[idx++] = c;
+        }
+        else if(isalpha(c))
+        {
+            c = toupper(c);
             (*postfix)[idx++] = c;
         }
         else if (c == '(')
@@ -238,36 +247,27 @@ enum errors read_string(FILE * input, char ** infix, int * capacity_infix)
     return OK;
 }
 
-void print_error(FILE * output, enum errors err, int count_line)
+void print_error(FILE * output, enum errors err)
 {
     switch (err)
     {
         case INVALID_INPUT:
-            fprintf(output, "№%d: invalid operand\n", count_line);
-            break;
-        case DIVISION_BY_ZERO:
-            fprintf(output, "№%d: division by zero\n", count_line);
+            fprintf(output, "invalid operand\n");
             break;
         case EMPTY_LINE:
-            fprintf(output, "№%d: empty line\n", count_line);
+            fprintf(output, "empty line\n");
             break;
         case EMPTY_BRACKET:
-            fprintf(output, "№%d: empty bracket\n", count_line);
+            fprintf(output, "empty bracket\n");
             break;
         case INVALID_BRACKET:
-            fprintf(output, "№%d: invalid bracket\n", count_line);
-            break;
-        case NEGATIVE_MOD:
-            fprintf(output, "№%d: negative mod\n", count_line);
-            break;
-        case NEGATIVE_POWER:
-            fprintf(output, "№%d: negative power\n", count_line);
+            fprintf(output, "invalid bracket\n");
             break;
         case UNUSED_DIGITS_OR_OPERATORS:
-            fprintf(output, "№%d: unused operand or operation\n", count_line);
+            fprintf(output, "unused operand or operation\n");
             break;
         default:
-            fprintf(output, "№%d: ????\n", count_line);
+            fprintf(output, "????\n");
             break;
     }
 }
@@ -300,6 +300,12 @@ Node* build_tree(const char* postfix)
             Stack_node_pop(&stack, &right);
             node->right = right;
 
+            if(postfix[i] == '~')
+            {
+                Stack_node_push(&stack, node);
+                continue;
+            }
+
             Node* left = NULL;
             Stack_node_pop(&stack, &left);
             node->left = left;
@@ -310,7 +316,6 @@ Node* build_tree(const char* postfix)
 
     Node * node;
     Stack_node_pop(&stack, &node);
-
 
     return node;
 }
@@ -339,11 +344,103 @@ Node * delete_tree(Node* root) {
     return NULL;
 }
 
+void generateFileName(char* filename, int length)
+{
+    srand((unsigned int)(time(NULL)));
+
+    for(int i = 0; i < length - 5; i++)
+    {
+        if(rand() % 2 == 0)
+        {
+            filename[i] = 'a' + rand() % 26;
+        } else {
+            filename[i] = '0' + rand() % 10;
+        }
+    }
+    filename[length - 5] = '\0';
+    strcat(filename, ".txt");
+}
+
+void extract_operands(const char* postfix, char* operands)
+{
+    int idx = 0;
+    for (int i = 0; postfix[i] != '\0'; i++)
+    {
+        char c = postfix[i];
+        if (isalpha(c))
+        {
+            c = toupper(c);
+            bool isUnique = true;
+            for (int j = 0; j < idx; j++) {
+                if (operands[j] == c)
+                {
+                    isUnique = false;
+                    break;
+                }
+            }
+            if (isUnique)
+            {
+                operands[idx++] = c;
+            }
+        }
+    }
+    operands[idx] = '\0';
+}
+
+int evaluate(Node* root, char * operand, int mask)
+{
+    if (root == NULL)
+        return 0;
+
+    if (!is_operator(root->value))
+    {
+        if(isalpha(root->value))
+        {
+            char * tmp = strchr(operand, root->value);
+            int idx = tmp - operand;
+            return (mask & (1 << idx)) ? 1 : 0;
+        }
+        else
+        {
+            return root->value - '0';
+        }
+    }
+
+    int leftValue = evaluate(root->left, operand, mask);
+    int rightValue = evaluate(root->right, operand, mask);
+
+    switch (root->value)
+    {
+        case '&':
+            return (leftValue && rightValue);
+        case '|':
+            return (leftValue || rightValue);
+        case '~':
+            return !rightValue;
+        case '-':
+            return !leftValue || rightValue;
+        case '+':
+            return (leftValue && !rightValue);
+        case '<':
+            return (leftValue ^ rightValue);
+        case '=':
+            return leftValue == rightValue;
+        case '!':
+            return !leftValue && !rightValue;
+        case '?':
+            return !(leftValue || rightValue);
+        default:
+            return false;
+    }
+    return 0;
+}
+
+
 int main(int argc, char * argv[])
 {
-    if(argc == 1)
+    if(argc != 2)
     {
-        printf("Usage: %s file1.txt file2.txt ...\n", argv[0]);
+        printf("Usage: %s file.txt\n", argv[0]);
         return INVALID_INPUT;
     }
 
@@ -356,59 +453,132 @@ int main(int argc, char * argv[])
         return INVALID_MEMORY;
     }
 
-    enum errors err;
-    for (int i = 1; i < argc; ++i)
+    char * output = (char *) malloc(sizeof(char) * (SIZE_OUTPUT + 1));
+    if(output == NULL)
     {
-        input = fopen(argv[i], "r");
-        if(input == NULL)
-        {
-            printf("Error opening file %s\n", argv[i]);
-            continue;
-        }
-
-        printf("file: %s\n", argv[i]);
-
-        err = read_string(input, &infix, &capacity_infix);
-
-        if(err == INVALID_MEMORY)
-        {
-            printf("memory allocation error\n");
-            fclose(input);
-            free(infix);
-            return INVALID_MEMORY;
-        }
-        else if(err != OK)
-        {
-//            print_error(err_output, err, count_line);
-            continue;
-        }
-
-        char * postfix = (char *) malloc(sizeof(char) * ( 3 * strlen(infix) + 1));
-        if(postfix == NULL)
-        {
-            fclose(input);
-            free(infix);
-            return INVALID_MEMORY;
-        }
-
-        err = infix_to_postfix(infix, &postfix);
-        if(err != OK)
-        {
-            free(postfix);
-            printf("!!");
-            continue;
-        }
-
-        printf("%s %s\n", infix, postfix);
-
-        Node * root = build_tree(postfix);
-
-        inorder(root, 0);
-
-
-        free(postfix);
+        printf("memory allocation error\n");
+        free(infix);
+        return INVALID_MEMORY;
     }
 
+    char * operand = (char *) malloc(sizeof(char ) * (SIZE_OPERAND + 1));
+    if(operand == NULL)
+    {
+        printf("memory allocation error\n");
+        free(infix);
+        free(output);
+        return INVALID_MEMORY;
+    }
+
+    enum errors err;
+
+    input = fopen(argv[1], "r");
+    if(input == NULL)
+    {
+        printf("Error opening file %s\n", argv[1]);
+        return ERROR_OPEN_FILE;
+    }
+
+    printf("file: %s\n", argv[1]);
+
+    generateFileName(output, SIZE_OUTPUT);
+
+    FILE * stream_output = fopen(output, "w");
+    if(stream_output == NULL)
+    {
+        printf("Error opening file %s\n", output);
+        return ERROR_OPEN_FILE;
+    }
+
+    printf("file_out: %s\n", output);
+
+    err = read_string(input, &infix, &capacity_infix);
+
+    if(err == INVALID_MEMORY)
+    {
+        printf("memory allocation error\n");
+        free(infix);
+        free(output);
+        fclose(stream_output);
+        fclose(input);
+        free(operand);
+        return INVALID_MEMORY;
+    }
+    else if(err != OK)
+    {
+        print_error(stream_output, err);
+        fclose(stream_output);
+        fclose(input);
+        free(infix);
+        free(output);
+        free(operand);
+        return err;
+    }
+
+    char * postfix = (char *) malloc(sizeof(char) * ( 3 * strlen(infix) + 1));
+    if(postfix == NULL)
+    {
+        fclose(stream_output);
+        fclose(input);
+        free(infix);
+        free(output);
+        free(operand);
+        return INVALID_MEMORY;
+    }
+
+    err = infix_to_postfix(infix, &postfix);
+    if(err != OK)
+    {
+        print_error(stream_output, err);
+        fclose(stream_output);
+        fclose(input);
+        free(infix);
+        free(output);
+        free(postfix);
+        free(operand);
+        return err;
+    }
+
+    Node * root = build_tree(postfix);
+
+    inorder(root, 0);
+
+    extract_operands(postfix, operand);
+//    printf("%s\n", operand);
+    int count_operand = strlen(operand);
+    if(count_operand == 0)
+    {
+        fprintf(stream_output, "infix: %s\npostfix: %s\n", infix, postfix);
+        int res = evaluate(root, operand, count_operand);
+        fprintf(stream_output, "result: %d", res);
+    }
+    else
+    {
+        fprintf(stream_output, "infix: %s\npostfix: %s\n", infix, postfix);
+        for(int i = 0; i < count_operand; ++i)
+        {
+            fprintf(stream_output, "\t%c\t|", operand[i]);
+        }
+        fprintf(stream_output, "\t%s\n", infix);
+        for(int i = 0; i <= (count_operand + 1); ++i)
+        {
+            for(int j = 0; j < (count_operand); ++j)
+            {
+                int k = (i & (1 << j)) ? 1 : 0;
+                fprintf(stream_output, "\t%d\t|", k);
+            }
+            int res = evaluate(root, operand, i);
+            fprintf(stream_output, "\t%d\n", res);
+        }
+    }
+
+    delete_tree(root);
+    fclose(stream_output);
+    fclose(input);
     free(infix);
+    free(output);
+    free(postfix);
+    free(operand);
+
     return 0;
 }
