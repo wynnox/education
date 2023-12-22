@@ -22,7 +22,7 @@ int main()
     printf("str: '%s' count:%d\n\n", buff, count);
 
     printf("\t\tTest 5\n");
-    count = oversprintf(buff, "over %'.2f pupupu %Ro", 1234567.89, 5);
+    count = oversprintf(buff, "over pupupu %Ro", 5);
     printf("str: '%s' count:%d\n\n", buff, count);
 
     printf("\t\tTest 6\n");
