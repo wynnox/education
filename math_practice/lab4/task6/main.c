@@ -184,12 +184,19 @@ enum errors infix_to_postfix(const char *infix, char **postfix)
         }
         else if (is_operator(c))
         {
-            while (Stack_char != NULL && precedence(c) <= precedence(Stack_char->value))
+            if (c == '~')
             {
-                (*postfix)[idx++] = Stack_char->value;
-                Stack_char_pop(&Stack_char, &temp);
+                Stack_char_push(&Stack_char, c);
             }
-            Stack_char_push(&Stack_char, c);
+            else
+            {
+                while (Stack_char != NULL && precedence(c) <= precedence(Stack_char->value))
+                {
+                    (*postfix)[idx++] = Stack_char->value;
+                    Stack_char_pop(&Stack_char, &temp);
+                }
+                Stack_char_push(&Stack_char, c);
+            }
             if(c == '-' || c == '+' || c == '<') i++;
         }
         else
@@ -395,8 +402,7 @@ int evaluate(Node* root, char * operand, int mask)
     {
         if(isalpha(root->value))
         {
-            char * tmp = strchr(operand, root->value);
-            int idx = tmp - operand;
+            int idx = strchr(operand, root->value) - operand;
             return (mask & (1 << idx)) ? 1 : 0;
         }
         else
