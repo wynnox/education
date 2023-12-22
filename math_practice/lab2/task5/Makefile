@@ -4,7 +4,7 @@ STD_FLAGS = -Wall -Werror -Wextra
 all: functions.o oversprintf.o main.o
 	$(CC) $(STD_FLAGS) $^ -o task_5.out -lm
 	rm -f *.o
-	valgrind --leak-check=full ./task_5.out > test.txt
+	./task_5.out
 
 functions.o: functions.c
 	$(CC) $(STD_FLAGS) -c $<

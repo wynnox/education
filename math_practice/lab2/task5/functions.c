@@ -33,11 +33,6 @@ char * Ro(int num)
     return roman;
 }
 
-//char * Zr()
-//{
-//
-//}
-
 
 char *Cv(int number, int base, char * array_base)
 {
@@ -115,7 +110,7 @@ char* dump_memory(void* input, int size)
     return res;
 }
 
-int To(char * number, int base)
+enum errors To(char * number, int base, int * result_number)
 {
     if(base <  2 || base > 36)
     {
@@ -130,7 +125,7 @@ int To(char * number, int base)
         flag_negative = 1;
         stop = 1;
     }
-    int result_number = 0;
+    *result_number = 0;
     for(int i = len - 1; i >= stop; --i)
     {
         int digit;
@@ -138,10 +133,78 @@ int To(char * number, int base)
             digit = number[i] - '0';
         else
             digit = toupper(number[i]) - 'A' + 10;
-        result_number += digit * pow(base, len - 1 - i);
+
+        if(digit >= base) return INVALID_INPUT;
+
+        *result_number += digit * pow(base, len - 1 - i);
     }
-    if(flag_negative) result_number *= -1;
-    return result_number;
+    if(flag_negative) *result_number *= -1;
+    return OK;
+}
+
+char* Zeckendorf(unsigned int num)
+{
+    unsigned int arr_max_size = 16;
+    unsigned int* fib = (unsigned int*)malloc(sizeof(unsigned int) * arr_max_size);
+    if (fib == NULL) {
+        return NULL;
+    }
+
+    fib[0] = 0;
+    fib[1] = 1;
+    unsigned int ind = 1;
+    while (fib[ind] < num)
+    {
+        ind++;
+        if (ind > arr_max_size) {
+            arr_max_size *= 2;
+            unsigned int* tmp = (unsigned int*)realloc(fib, arr_max_size);
+            if (tmp == NULL)
+            {
+                free(fib);
+                return NULL;
+            }
+            fib = tmp;
+        }
+        fib[ind] = fib[ind-1] + fib[ind-2];
+    }
+
+    unsigned int num1 = num;
+    for (int i = ind; i > 0; i--)
+    {
+        int razn = num1 - fib[i];
+        if (razn >= 0) {
+            num1 -= fib[i];
+            fib[i] = 0;
+        }
+        if (num1 == 0) {
+            break;
+        }
+    }
+
+    char* ans = (char*)malloc(sizeof(char) * (ind + 3));
+    if (ans == NULL)
+    {
+        free(fib);
+        return NULL;
+    }
+    for (unsigned int i = 0; i <= ind; i++)
+    {
+        ans[i] = (fib[i] == 0) ? '1' : '0';
+    }
+    if (ans[ind] == '0')
+    {
+        ans[ind] = '1';
+        ans[ind+1] = '\0';
+    }
+    else
+    {
+        ans[ind+1] = '1';
+        ans[ind+2] = '\0';
+    }
+
+    free(fib);
+    return ans;
 }
 
 

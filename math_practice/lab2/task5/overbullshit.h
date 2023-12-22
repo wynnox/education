@@ -20,10 +20,12 @@ enum errors
 
 
 int oversprintf(char * str, const char * format, ...);
+int overfprintf(FILE* stream, char* format, ...);
 
 char * Ro(int num);
 char * Cv(int number, int base, char * array_base);
-int To(char * number, int base);
+enum errors To(char * number, int base, int * result_number);
+char* Zeckendorf(unsigned int num);
 char* dump_memory(void* input, int size);
 
 
