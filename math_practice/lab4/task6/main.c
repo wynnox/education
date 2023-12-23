@@ -270,7 +270,7 @@ void print_error(FILE * output, enum errors err)
             fprintf(output, "invalid bracket\n");
             break;
         case UNUSED_DIGITS_OR_OPERATORS:
-            fprintf(output, "unused operand or operation\n");
+            fprintf(output, "invalid infix\n");
             break;
         default:
             fprintf(output, "????\n");
@@ -440,6 +440,47 @@ int evaluate(Node* root, char * operand, int mask)
     return 0;
 }
 
+int is_binary_operation(char symbol)
+{
+    return ((symbol == '?') || (symbol == '!') || (symbol == '+') ||
+            (symbol == '&') || (symbol == '|') || (symbol == '-') ||
+            (symbol == '>') || (symbol == '=') || (symbol == '>'));
+}
+
+int is_operand(char c)
+{
+    if(isalpha(c))
+    {
+        return 1;
+    }
+    else
+    {
+        return c == '0' || c == '1';
+    }
+}
+
+
+int check_valid(char * infix)
+{
+    int len = strlen(infix);
+    if(is_binary_operation(infix[0]) || infix[0] == ')'
+       || infix[len - 1] == '(' || is_binary_operation(infix[len - 1]) || infix[len - 1] == '~')
+    {
+        return 0;
+    }
+    for(int i = 0; i < len - 1; ++i)
+    {
+        int a = infix[i], b = infix[i+1];
+        if(is_operand(a) && is_operand(b)) return 0;
+        if((a == '(' || a == ')') && (b == '(' || b == ')') && (a != b)) return 0;
+        if((is_binary_operation(a) || a == '~') && (b == ')')) return 0;
+        if(a == '(' && (is_binary_operation(b) || b == '~')) return 0;
+        if((is_binary_operation(a) || a == '~') && (is_binary_operation(b))) return 0;
+        if(a == '(' && is_operand(b)) return 0;
+        if(is_operand(a) && b == ')') return 0;
+    }
+    return 1;
+}
 
 int main(int argc, char * argv[])
 {
@@ -520,6 +561,7 @@ int main(int argc, char * argv[])
         return err;
     }
 
+
     char * postfix = (char *) malloc(sizeof(char) * ( 3 * strlen(infix) + 1));
     if(postfix == NULL)
     {
@@ -529,6 +571,19 @@ int main(int argc, char * argv[])
         free(output);
         free(operand);
         return INVALID_MEMORY;
+    }
+
+    int check = check_valid(infix);
+    if(check == 0)
+    {
+        print_error(stream_output, UNUSED_DIGITS_OR_OPERATORS);
+        fclose(stream_output);
+        fclose(input);
+        free(infix);
+        free(output);
+        free(postfix);
+        free(operand);
+        return UNUSED_DIGITS_OR_OPERATORS;
     }
 
     err = infix_to_postfix(infix, &postfix);
@@ -549,7 +604,7 @@ int main(int argc, char * argv[])
     inorder(root, 0);
 
     extract_operands(postfix, operand);
-//    printf("%s\n", operand);
+
     int count_operand = strlen(operand);
     if(count_operand == 0)
     {
