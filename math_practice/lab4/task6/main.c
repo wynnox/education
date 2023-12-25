@@ -393,10 +393,48 @@ void extract_operands(const char* postfix, char* operands)
     operands[idx] = '\0';
 }
 
+enum errors validate_node(Node* node) {
+    if (!is_operator(node->value) && !isdigit(node->value) && !isalpha(node->value)) {
+        return UNUSED_DIGITS_OR_OPERATORS;
+    }
+
+    if (is_operator(node->value) && (node->right == NULL || (node->left == NULL && node->value != '~'))) {
+        return UNUSED_DIGITS_OR_OPERATORS;
+    }
+
+    if (node->value == '~' && (node->left != NULL || node->right == NULL)) {
+        return UNUSED_DIGITS_OR_OPERATORS;
+    }
+
+    return OK;
+}
+
+
+enum errors validate_tree(Node* node) {
+    if (node == NULL) {
+        return OK;
+    }
+
+    enum errors err = validate_node(node);
+    if (err != OK) {
+        return err;
+    }
+
+    err = validate_tree(node->left);
+    if (err != OK) {
+        return err;
+    }
+
+    return validate_tree(node->right);
+}
+
+
 int evaluate(Node* root, char * operand, int mask)
 {
     if (root == NULL)
         return 0;
+
+
 
     if (!is_operator(root->value))
     {
@@ -435,7 +473,7 @@ int evaluate(Node* root, char * operand, int mask)
         case '?':
             return !(leftValue || rightValue);
         default:
-            return false;
+            return 0;
     }
     return 0;
 }
@@ -444,7 +482,7 @@ int is_binary_operation(char symbol)
 {
     return ((symbol == '?') || (symbol == '!') || (symbol == '+') ||
             (symbol == '&') || (symbol == '|') || (symbol == '-') ||
-            (symbol == '>') || (symbol == '=') || (symbol == '>'));
+            (symbol == '>') || (symbol == '=') || (symbol == '<'));
 }
 
 int is_operand(char c)
@@ -457,29 +495,6 @@ int is_operand(char c)
     {
         return c == '0' || c == '1';
     }
-}
-
-
-int check_valid(char * infix)
-{
-    int len = strlen(infix);
-    if(is_binary_operation(infix[0]) || infix[0] == ')'
-       || infix[len - 1] == '(' || is_binary_operation(infix[len - 1]) || infix[len - 1] == '~')
-    {
-        return 0;
-    }
-    for(int i = 0; i < len - 1; ++i)
-    {
-        int a = infix[i], b = infix[i+1];
-        if(is_operand(a) && is_operand(b)) return 0;
-        if((a == '(' || a == ')') && (b == '(' || b == ')') && (a != b)) return 0;
-        if((is_binary_operation(a) || a == '~') && (b == ')')) return 0;
-        if(a == '(' && (is_binary_operation(b) || b == '~')) return 0;
-        if((is_binary_operation(a) || a == '~') && (is_binary_operation(b))) return 0;
-        if(a == '(' && is_operand(b)) return 0;
-        if(is_operand(a) && b == ')') return 0;
-    }
-    return 1;
 }
 
 int main(int argc, char * argv[])
@@ -573,19 +588,6 @@ int main(int argc, char * argv[])
         return INVALID_MEMORY;
     }
 
-    int check = check_valid(infix);
-    if(check == 0)
-    {
-        print_error(stream_output, UNUSED_DIGITS_OR_OPERATORS);
-        fclose(stream_output);
-        fclose(input);
-        free(infix);
-        free(output);
-        free(postfix);
-        free(operand);
-        return UNUSED_DIGITS_OR_OPERATORS;
-    }
-
     err = infix_to_postfix(infix, &postfix);
     if(err != OK)
     {
@@ -600,6 +602,19 @@ int main(int argc, char * argv[])
     }
 
     Node * root = build_tree(postfix);
+
+    err = validate_tree(root);
+    if(err != OK)
+    {
+        print_error(stream_output, err);
+        fclose(stream_output);
+        fclose(input);
+        free(infix);
+        free(output);
+        free(postfix);
+        free(operand);
+        return err;
+    }
 
     inorder(root, 0);
 
