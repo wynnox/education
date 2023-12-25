@@ -454,6 +454,11 @@ int main(int argc, char * argv[])
 
             int idx = array_name - 'A';
             Array * arr = array[idx];
+            if(arr == NULL)
+            {
+                printf("error: №%d '%s' (empty array)\n",count_line, command);
+                continue;
+            }
 
             err = rand_arr(&arr, array_name, count, lb, rb);
             if(err != OK)
@@ -530,7 +535,16 @@ int main(int argc, char * argv[])
             sscanf(command, "Free(%c)", &array_name);
             array_name = toupper(array_name);
 
+            if(array[array_name - 'A'] == NULL)
+            {
+                printf("error: №%d '%s' (empty array)\n",count_line, command);
+                continue;
+            }
+
             array[array_name - 'A']->size = 0;
+#ifdef DEBUG
+            printf("free done\n");
+#endif
         }
         else if(strstr(command, "Remove"))
         {
@@ -734,6 +748,9 @@ int main(int argc, char * argv[])
             if(counts == NULL)
             {
                 printf("memory allocation error\n");
+                fclose(death_note);
+                free(command);
+                destroy_arrays(array);
                 return INVALID_MEMORY;
             }
 
