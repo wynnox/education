@@ -113,6 +113,17 @@ enum errors Stack_node_pop(Stack_node ** head, Node** num)
     return OK;
 }
 
+void Stack_node_free(Stack_node * head)
+{
+    Stack_node * tmp = NULL;
+    while (head)
+    {
+        tmp = head;
+        head = head->next;
+        free(tmp);
+    }
+}
+
 int is_operator(const char symbol)
 {
     return ((symbol == '(') || (symbol == ')') || (symbol == '~') ||
@@ -154,7 +165,7 @@ enum errors infix_to_postfix(const char *infix, char **postfix)
     {
         c = infix[i];
 
-        if (isdigit(c))
+        if (c == '0' || c == '1')
         {
             (*postfix)[idx++] = c;
         }
@@ -270,12 +281,34 @@ void print_error(FILE * output, enum errors err)
             fprintf(output, "invalid bracket\n");
             break;
         case UNUSED_DIGITS_OR_OPERATORS:
-            fprintf(output, "invalid infix\n");
+            fprintf(output, "invalid invalid\n");
             break;
         default:
             fprintf(output, "????\n");
             break;
     }
+}
+
+enum errors validate_node(Node* node)
+{
+    if (node == NULL)
+    {
+        return UNUSED_DIGITS_OR_OPERATORS;
+    }
+
+    if (!is_operator(node->value) && !isdigit(node->value) && !isalpha(node->value)) {
+        return UNUSED_DIGITS_OR_OPERATORS;
+    }
+
+    if (is_operator(node->value) && (node->right == NULL || (node->left == NULL && node->value != '~'))) {
+        return UNUSED_DIGITS_OR_OPERATORS;
+    }
+
+    if (node->value == '~' && (node->left != NULL || node->right == NULL)) {
+        return UNUSED_DIGITS_OR_OPERATORS;
+    }
+
+    return OK;
 }
 
 Node* create_node(char value)
@@ -288,42 +321,123 @@ Node* create_node(char value)
     return node;
 }
 
-Node* build_tree(const char* postfix)
+Node * delete_tree(Node* root) {
+    if (root)
+    {
+        delete_tree(root->left);
+        delete_tree(root->right);
+        free(root);
+    }
+    return NULL;
+}
+
+enum errors build_tree(const char* postfix, Node ** root)
 {
+    enum errors err;
     Stack_node* stack = NULL;
     for (int i = 0; postfix[i] != '\0'; i++)
     {
         if (isdigit(postfix[i]) || isalpha(postfix[i]))
         {
             Node* node = create_node(postfix[i]);
+            if(node == NULL)
+            {
+                delete_tree(*root);
+                Stack_node_free(stack);
+                return INVALID_MEMORY;
+            }
             Stack_node_push(&stack, node);
         }
         else if (is_operator(postfix[i]))
         {
             Node* node = create_node(postfix[i]);
+            if(node == NULL)
+            {
+                delete_tree(*root);
+                Stack_node_free(stack);
+                return INVALID_MEMORY;
+            }
 
             Node* right = NULL;
-            Stack_node_pop(&stack, &right);
+            err = Stack_node_pop(&stack, &right);
+            if(err != OK)
+            {
+                delete_tree(*root);
+                Stack_node_free(stack);
+                delete_tree(node);
+                return INVALID_MEMORY;
+            }
+
+            err = validate_node(right);
+            if (err != OK)
+            {
+                delete_tree(*root);
+                Stack_node_free(stack);
+                delete_tree(node);
+                return err;
+            }
             node->right = right;
 
             if(postfix[i] == '~')
             {
-                Stack_node_push(&stack, node);
+                err = Stack_node_push(&stack, node);
+                if(err != OK)
+                {
+                    delete_tree(*root);
+                    Stack_node_free(stack);
+                    delete_tree(node);
+                    return INVALID_MEMORY;
+                }
                 continue;
             }
 
             Node* left = NULL;
-            Stack_node_pop(&stack, &left);
+            err = Stack_node_pop(&stack, &left);
+            if(err != OK)
+            {
+                delete_tree(*root);
+                Stack_node_free(stack);
+                delete_tree(node);
+                return INVALID_MEMORY;
+            }
+
+            err = validate_node(left);
+            if (err != OK)
+            {
+                delete_tree(*root);
+                Stack_node_free(stack);
+                delete_tree(node);
+                return err;
+            }
             node->left = left;
 
-            Stack_node_push(&stack, node);
+            err = Stack_node_push(&stack, node);
+            if(err != OK)
+            {
+                delete_tree(*root);
+                Stack_node_free(stack);
+                delete_tree(node);
+                return INVALID_MEMORY;
+            }
         }
     }
 
-    Node * node;
-    Stack_node_pop(&stack, &node);
+    err = Stack_node_pop(&stack, root);
+    if(err != OK)
+    {
+        delete_tree(*root);
+        Stack_node_free(stack);
+        return INVALID_MEMORY;
+    }
 
-    return node;
+    if(stack != NULL)
+    {
+        Stack_node_free(stack);
+        delete_tree(*root);
+        return UNUSED_DIGITS_OR_OPERATORS;
+    }
+
+    return OK;
 }
 
 void inorder(Node* root, int depth)
@@ -338,16 +452,6 @@ void inorder(Node* root, int depth)
     }
     printf("\\_%c\n", root->value);
     inorder(root->right, depth + 1);
-}
-
-Node * delete_tree(Node* root) {
-    if (root)
-    {
-        delete_tree(root->left);
-        delete_tree(root->right);
-        free(root);
-    }
-    return NULL;
 }
 
 void generateFileName(char* filename, int length)
@@ -393,48 +497,10 @@ void extract_operands(const char* postfix, char* operands)
     operands[idx] = '\0';
 }
 
-enum errors validate_node(Node* node) {
-    if (!is_operator(node->value) && !isdigit(node->value) && !isalpha(node->value)) {
-        return UNUSED_DIGITS_OR_OPERATORS;
-    }
-
-    if (is_operator(node->value) && (node->right == NULL || (node->left == NULL && node->value != '~'))) {
-        return UNUSED_DIGITS_OR_OPERATORS;
-    }
-
-    if (node->value == '~' && (node->left != NULL || node->right == NULL)) {
-        return UNUSED_DIGITS_OR_OPERATORS;
-    }
-
-    return OK;
-}
-
-
-enum errors validate_tree(Node* node) {
-    if (node == NULL) {
-        return OK;
-    }
-
-    enum errors err = validate_node(node);
-    if (err != OK) {
-        return err;
-    }
-
-    err = validate_tree(node->left);
-    if (err != OK) {
-        return err;
-    }
-
-    return validate_tree(node->right);
-}
-
-
 int evaluate(Node* root, char * operand, int mask)
 {
     if (root == NULL)
         return 0;
-
-
 
     if (!is_operator(root->value))
     {
@@ -601,9 +667,8 @@ int main(int argc, char * argv[])
         return err;
     }
 
-    Node * root = build_tree(postfix);
-
-    err = validate_tree(root);
+    Node * root = NULL;
+    err = build_tree(postfix, &root);
     if(err != OK)
     {
         print_error(stream_output, err);
@@ -615,6 +680,7 @@ int main(int argc, char * argv[])
         free(operand);
         return err;
     }
+
 
     inorder(root, 0);
 
