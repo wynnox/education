@@ -148,11 +148,11 @@ enum errors rand_arr(Array **a, char name, int count, int lb, int rb)
     if (*a == NULL)
     {
         *a = (Array *)malloc(sizeof(Array));
-        (*a)->data = NULL;
         if (*a == NULL)
         {
             return INVALID_MEMORY;
         }
+        (*a)->data = NULL;
     }
 
     if(lb > rb)
@@ -454,11 +454,6 @@ int main(int argc, char * argv[])
 
             int idx = array_name - 'A';
             Array * arr = array[idx];
-            if(arr == NULL)
-            {
-                printf("error: №%d '%s' (empty array)\n",count_line, command);
-                continue;
-            }
 
             err = rand_arr(&arr, array_name, count, lb, rb);
             if(err != OK)
@@ -723,6 +718,12 @@ int main(int argc, char * argv[])
             }
 
             int len = arr->size;
+            if(len == 0)
+            {
+                printf("error: №%d '%s' (size == 0)\n", count_line, command);
+                continue;
+            }
+
             int max = 0, min = INT_MAX;
             int max_i, min_i;
             double average = 0;
