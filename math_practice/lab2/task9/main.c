@@ -34,7 +34,7 @@ int gcd(int a, int b)
 
 int is_finite_representation(double number, int base)
 {
-    int denominator = 1;
+    int numerator, denominator = 1;
 
     while (fabs(number - floor(number)) > EPSILON)
     {
@@ -42,11 +42,13 @@ int is_finite_representation(double number, int base)
         denominator *= 10;
     }
 
+    numerator = (int)number;
 #ifdef DEBUG
-    printf("%lf\n", number);
+    printf("%d %d\n", numerator, denominator);
 #endif
 
-    int gcd_ = gcd(number, denominator);
+//    numerator = (int)number;
+    int gcd_ = gcd(numerator, denominator);
     if(gcd_ != 1)
     {
         denominator /= gcd_;
@@ -123,7 +125,7 @@ int main()
     double *res = NULL;
     int count = 0;
 
-    enum errors err = check_finite_representation(&res, 10, &count ,3, 0.1, 0.25, 0.375);
+    enum errors err = check_finite_representation(&res, 25, &count, 3, 0.04, 0.0004, 0.37);
     if (err == INVALID_MEMORY)
     {
         printf("memory allocation error\n");
